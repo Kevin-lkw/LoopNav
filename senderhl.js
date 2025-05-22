@@ -73,7 +73,7 @@ function random_pos (range){
     if (dx*dx + dz*dz > 80*80) {
       continue
     }
-    if (args.location === 'stronghold') {
+    if (args.location === 'stronghold' || args.location === 'nether_bastion' || args.location === 'nether_fortress') {
       return new Vec3(start_pos.x+x, start_pos.y, start_pos.z+z)
     }
     const pos = land_pos(start_pos.x+x, start_pos.z+z)
@@ -122,7 +122,7 @@ function move (range) {
   const defaultMove = new Movements(bot)
   defaultMove.allowSprinting = false
   bot.pathfinder.setMovements(defaultMove)
-  if (args.location === 'stronghold') {
+  if (args.location === 'stronghold' || args.location === 'nether_bastion' || args.location === 'nether_fortress') {
     bot.pathfinder.setGoal(new GoalNearXZ(pos.x, pos.z, 1), false)
   }
   else {

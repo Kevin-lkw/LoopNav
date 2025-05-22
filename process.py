@@ -8,22 +8,18 @@ import os
 import glob
 import json 
 
-start_port = 8089
-max_port = 9089
-target_number = 20
+target_number = 25
 parser = argparse.ArgumentParser(description='Run script')
-parser.add_argument('--name', type=str, default='Bot', help='Bot name')
-parser.add_argument('--sup', action='store_true', help='sup')
+parser.add_argument('--output_path', type=str, required=True, help='output path')
+parser.add_argument('--target', type=str, required=True, help='target')
 args = parser.parse_args()
 
 targets = village_targets
-folder = "data"
-if args.sup:
-    targets = biome_targets
-    folder = "data_sup"
+
+
 def count_json_files(nv_type, location, nvrange):
     """检查指定位置是否已经有足够的JSON文件"""
-    path = f'/nfs-shared-2/liankewei-mus2/{folder}/{nv_type}/{location}/{nvrange}'
+    path = f'{args.output_path}/{nv_type}/{location}/{nvrange}'
     if not os.path.exists(path):
         return 0
     json_files = glob.glob(os.path.join(path, '*.json'))
@@ -34,7 +30,7 @@ def del_orphaned_avi_files(nv_type, location, nvrange, delete=False):
     如果delete=True，则删除这些文件
     返回没有对应JSON的AVI文件数量
     """
-    path = f'/nfs-shared-2/liankewei-mus2/{folder}/{nv_type}/{location}/{nvrange}'
+    path = f'{args.output_path}/{nv_type}/{location}/{nvrange}'
     if not os.path.exists(path):
         return 0
     
@@ -61,7 +57,7 @@ def del_orphaned_avi_files(nv_type, location, nvrange, delete=False):
     
     return len(orphaned_files)
 def del_json_files(nv_type, location,nvrange):
-    path = f'/nfs-shared-2/liankewei-mus2/{folder}/{nv_type}/{location}/{nvrange}'
+    path = f'{args.output_path}/{nv_type}/{location}/{nvrange}'
 
     json_files = glob.glob(os.path.join(path, '*.json'))    
     
@@ -139,7 +135,7 @@ def get_offset_actions(path):
                 return i
     return None
 def del_illegal_json_files(nv_type,location,nvrange):
-    path = f'/nfs-shared-2/liankewei-mus2/{folder}/{nv_type}/{location}/{nvrange}'
+    path = f'{args.output_path}/{nv_type}/{location}/{nvrange}'
     json_files = glob.glob(os.path.join(path, '*.json'))
     for fn in json_files:
         with open(fn, 'r') as f:
@@ -168,14 +164,10 @@ def del_illegal_json():
                 del_illegal_json_files(nv_type,lo,nvrange)
 if __name__ == "__main__":
     
-    
-    # del_illegal_json()
+    del_illegal_json()
 
     del_json()
-    
     
     del_orphaned_avi()
     
     count_json()
-
-    

@@ -9,9 +9,7 @@ import time
 import argparse
 from queue import Queue
 from threading import Thread
-import multiprocessing as mp
 import fcntl  # 用于获取socket缓冲区信息
-import struct  # 用于打包和解包
 import array
 from queue import Empty
 HOST = ''
@@ -196,12 +194,6 @@ try:
             retcode = 1
             break
         img = cv2.imdecode(np.frombuffer(stringData, dtype=np.uint8), cv2.IMREAD_UNCHANGED)
-        
-        # 输出socket缓冲区使用情况
-        # buffer_used = get_recv_buffer_used(conn)
-        # buffer_size = conn.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
-        # print(f"\nFrame {img_count}:")
-        # print(f"Socket buffer: {buffer_used}/{buffer_size} bytes ({buffer_used/buffer_size*100:.1f}% used)")
         if args.teaser:
             # directly save the image
             if img_count % 5 == 0:

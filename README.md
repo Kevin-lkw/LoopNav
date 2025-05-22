@@ -42,10 +42,16 @@ python run.py --name Bot --target village --output_path ./output
 --target: the target to collect data, can be 'village', 'biome' or 'structure'
 --output_path: the path to save the collected data
 
+### Step 3. process the collected data
+there might be some illegal data(e.g. the agent is died in lava or loss connection with the server)
+we provide a script to process the data
+this script will delete the illegal data and count the number of trajectories for each target
+```bash
+python process.py --output_path ./output --target village
+```
 
 ## FAQ
 
-- tp command failed
-  solution:give the Bot OP permission to use tp command
+- tp command failed: give the Bot OP permission to use tp command
 
 
