@@ -114,16 +114,14 @@ argparser.add_argument('--nvtype', type=str, default='normal', help='ABA, ABCA o
 argparser.add_argument('--port', type=int, default=8089, help='Port number')
 argparser.add_argument('--nvrange', type=int, default=30, help='range')
 argparser.add_argument('--teaser', action='store_true', help='teaser mode')
-argparser.add_argument('--sup', action='store_true', help='sup mode')
+argparser.add_argument('--output_path', type=str, required=True, help='output path')
+
 args = argparser.parse_args()
 PORT = args.port
 
 # 创建输出目录
 time_now = datetime.now().strftime("%m-%d_%H-%M-%S")
-if args.sup:
-    output_path = f'/nfs-shared-2/liankewei-mus2/data_sup/{args.nvtype}/{args.location}/{args.nvrange}'
-else:
-    output_path = f'/nfs-shared-2/liankewei-mus2/data/{args.nvtype}/{args.location}/{args.nvrange}'
+output_path = f'{args.output_path}/{args.nvtype}/{args.location}/{args.nvrange}'
 
 if args.teaser:
     output_path = f'./teaser_data'

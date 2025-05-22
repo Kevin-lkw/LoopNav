@@ -5,6 +5,7 @@ const mineflayerViewer = require('prismarine-viewer').mineflayer
 const { pathfinder, Movements, goals: { GoalNear, GoalNearXZ, GoalBlock } } = require('mineflayer-pathfinder')
 const {get_target} = require('./targets.js')
 const Vec3 = require('vec3').Vec3
+const fs = require('fs')  // 添加 fs 模块
 
 const args = minimist(process.argv.slice(2))
 let tp_target = get_target(args.location)
@@ -72,6 +73,9 @@ function random_pos (range){
     if (dx*dx + dz*dz > 80*80) {
       continue
     }
+    if (args.location === 'stronghold') {
+      return new Vec3(start_pos.x+x, start_pos.y, start_pos.z+z)
+    }
     const pos = land_pos(start_pos.x+x, start_pos.z+z)
     if (Math.abs(pos.y - start_pos.y) > 10) {
       continue
@@ -88,7 +92,12 @@ function random_pos (range){
       bot.registry.blocksByName.red_sand.id,
       bot.registry.blocksByName.terracotta.id,
       bot.registry.blocksByName.mycelium.id,
-      
+      bot.registry.blocksByName.end_stone.id,
+      bot.registry.blocksByName.nether_bricks.id,
+      bot.registry.blocksByName.blackstone.id,
+      bot.registry.blocksByName.polished_blackstone_bricks.id,
+      bot.registry.blocksByName.cracked_polished_blackstone_bricks.id,
+      bot.registry.blocksByName.netherrack.id,
     ])
     if (pos !== null){
       const block = bot.blockAt(pos)
@@ -113,9 +122,12 @@ function move (range) {
   const defaultMove = new Movements(bot)
   defaultMove.allowSprinting = false
   bot.pathfinder.setMovements(defaultMove)
-  // bot.pathfinder.setGoal(new GoalNearXZ(pos.x, pos.z, 1), false)
-  // use xyz goal instead
-  bot.pathfinder.setGoal(new GoalBlock(pos.x, pos.y, pos.z), false)
+  if (args.location === 'stronghold') {
+    bot.pathfinder.setGoal(new GoalNearXZ(pos.x, pos.z, 1), false)
+  }
+  else {
+    bot.pathfinder.setGoal(new GoalBlock(pos.x, pos.y, pos.z), false)
+  }
 }
 
 function* moveAround(range){
@@ -163,11 +175,18 @@ function* lookaround () {
   })
 }
 bot.once('spawn', () => {
-  bot.chat(`/tp @p ${tp_target.x} ${tp_target.y} ${tp_target.z}`)
+  if (args.location === 'nether_bastion' || args.location === 'nether_fortress') {
+    bot.chat(`/execute in minecraft:the_nether run tp @p ${tp_target.x} ${tp_target.y} ${tp_target.z}`)
+  }
+  else if (args.location === 'end_city' || args.location === 'end_mainland') {
+    bot.chat(`/execute in minecraft:the_end run tp @p ${tp_target.x} ${tp_target.y} ${tp_target.z}`)
+  }
+  else {
+    bot.chat(`/execute in minecraft:overworld run tp @p ${tp_target.x} ${tp_target.y} ${tp_target.z}`)
+  }
   // wait for 1 seconds to let the bot tp
-  // mineflayerViewer(bot, { port:3008, firstPerson: false, width: 640, height: 360 })
   setTimeout(() => {
-    // First move to a random position 
+    // First move to a random position with inital range
     move(20)
     
     // Track if we've started the viewer
@@ -203,11 +222,6 @@ bot.once('spawn', () => {
         bot.emit('abnormal_exit')
         process.exit(1)
       }
-      // const path = [bot.entity.position.offset(0, 0.5, 0)]
-      // for (const node of r.path) {
-      //   path.push({ x: node.x, y: node.y + 0.5, z: node.z })
-      // }
-      // bot.viewer.drawLine('path', path, 0xff00ff)
     })
     
     stuck_count = 0

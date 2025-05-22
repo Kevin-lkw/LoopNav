@@ -12,14 +12,15 @@ max_port = 9089
 
 parser = argparse.ArgumentParser(description='Run script')
 parser.add_argument('--name', type=str, default='Bot', help='Bot name')
-# parser.add_argument('--nvrange', type=int, default=30, help='nvrange')
+parser.add_argument('--output_path', type=str, default='./output', help='output path')
+parser.add_argument('--target', type=str, default='village', help='target or biome or structure')
 args = parser.parse_args()
 
 total_eps_number = 20
 
 def count_json_files(location,nv_type,nvrange):
     """检查指定位置是否已经有足够的JSON文件"""
-    path = f'/nfs-shared-2/liankewei-mus2/data/{nv_type}/{location}/{nvrange}'
+    path = f'{args.output_path}/{nv_type}/{location}/{nvrange}'
     if not os.path.exists(path):
         return 0
     json_files = glob.glob(os.path.join(path, '*.json'))
@@ -42,7 +43,7 @@ def run_one_round(round_num, location, nv_type, nvrange):
     port = find_free_port()
     # 1. 启动 receiver.py
     receiver = subprocess.Popen(['python', 'receiver.py', '--location', location,
-         '--nvtype', nv_type, '--port', str(port), '--nvrange', str(nvrange)])
+         '--nvtype', nv_type, '--port', str(port), '--nvrange', str(nvrange), '--output_path', args.output_path])
     print("receiver.py 已启动")
 
     # 2. 启动 senderhl.js
@@ -97,8 +98,16 @@ def collect(lo, nv_type, nvrange):
     print(f"\n全部{collect_number}轮执行完成。")
     
 def main():
-    random.shuffle(village_targets) 
-    for lo in village_targets:
+    if args.target == 'village':
+        targets = village_targets
+    elif args.target == 'biome':
+        targets = biome_targets
+    elif args.target == 'structure':
+        targets = structure_targets
+    else:
+        raise ValueError(f"Invalid target: {args.target}")
+    random.shuffle(targets)
+    for lo in targets:
         for nv_type in ['ABA','ABCA']:
             for nvrange in [5,15,30,50]:
                 collect(lo,nv_type,nvrange)

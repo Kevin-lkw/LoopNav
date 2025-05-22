@@ -7,7 +7,7 @@ Certain code is modified from above projects to support features. Modified versi
 [LoopNav-pathfinder](https://github.com/Kevin-lkw/mineflayer-pathfinder),
 [LoopNav-prismarine-viewer](https://github.com/Kevin-lkw/prismarine-viewer).
 
-See [CHANGES] for details.
+See [CHANGES.md](CHANGES.md) for details.
 
 ## ✨ Features
 
@@ -27,13 +27,25 @@ npm install
 
 ## Usage
 
-### Step 1. start a minecraft server
-Assume the port is PORT.
+### Step 1. start a minecraft server on PORT
+
+for example, in liunx server
+```bash
+java -Xmx2G -Xms2G -jar server.jar nogui
+```
 
 ### Step 2. run the script
 ```bash
-node 
+python run.py --name Bot --target village --output_path ./output
 ```
+--name: the name of the bot
+--target: the target to collect data, can be 'village', 'biome' or 'structure'
+--output_path: the path to save the collected data
 
 
-## Changes
+## FAQ
+
+- tp command failed
+  solution:give the Bot OP permission to use tp command
+
+
