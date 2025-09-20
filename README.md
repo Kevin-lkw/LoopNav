@@ -1,13 +1,13 @@
 # LoopNav
 
-This project provides a framework for collecting navigation trajectories in the Minecraft environment using [Mineflayer](https://github.com/PrismarineJS/mineflayer). It supports controllable agents, path planning via A*[Mineflayer-pathfinder](https://github.com/Kevin-lkw/mineflayer-pathfinder), and image rendering [Prismarine-viewer](https://github.com/PrismarineJS/prismarine-viewer).
+This project provides a framework for collecting navigation trajectories in the Minecraft environment using [Mineflayer](https://github.com/PrismarineJS/mineflayer). It supports controllable agents, path planning via A*[Mineflayer-pathfinder](https://github.com/PrismarineJS/mineflayer-pathfinder), and image rendering [Prismarine-viewer](https://github.com/PrismarineJS/prismarine-viewer).
 
 Certain code is modified from above projects to support features. Modified version is in
-[LoopNav-mineflayer](https://github.com/Kevin-lkw/prismarine-viewer),
+[LoopNav-mineflayer](https://github.com/Kevin-lkw/mineflayer),
 [LoopNav-pathfinder](https://github.com/Kevin-lkw/mineflayer-pathfinder),
 [LoopNav-prismarine-viewer](https://github.com/Kevin-lkw/prismarine-viewer).
 
-See [CHANGES.md](CHANGES.md) for details.
+See [CHANGES.md](Changes.md) for details.
 
 ## ✨ Features
 
