@@ -1,4 +1,9 @@
 # LoopNav
+This is the offical repo for [LoopNav](https://arxiv.org/html/2505.22976).
+[Dataset](https://huggingface.co/datasets/kevinLian/LoopNav)
+
+For baselines and evaluation, see baseline folder.
+
 
 This project provides a framework for collecting navigation trajectories in the Minecraft environment using [Mineflayer](https://github.com/PrismarineJS/mineflayer). It supports controllable agents, path planning via A*[Mineflayer-pathfinder](https://github.com/PrismarineJS/mineflayer-pathfinder), and image rendering [Prismarine-viewer](https://github.com/PrismarineJS/prismarine-viewer).
 
