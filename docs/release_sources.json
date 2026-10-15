@@ -1,0 +1,475 @@
+{
+  "release_date": "2026-10-15",
+  "sgcs_pipeline_version": "sam3_audit_v2_house_merged_ground_20260801",
+  "upstreams": {
+    "oasis": {
+      "repository": "https://github.com/etched-ai/open-oasis.git",
+      "commit": "f59deef2c019c212bd0c5a3a5b986a51f3701847"
+    },
+    "mineworld": {
+      "repository": "https://github.com/microsoft/mineworld.git",
+      "commit": "b1b5a385aeef20aed0cc1e0d5f25f74776b17fdc"
+    },
+    "nwm": {
+      "repository": "https://github.com/facebookresearch/nwm",
+      "commit": "16bec8770d73ff9e82531bad36a8229cd1a02554"
+    },
+    "diamond": {
+      "repository": "https://github.com/eloialonso/diamond.git",
+      "commit": "851cefb497733d27f1b85c804104638765860fca"
+    },
+    "worldmem": {
+      "repository": "https://github.com/Kevin-lkw/worldmem.git",
+      "commit": "ac7f3cb1b5c6065f91547dd5ef8c149045db27ac"
+    }
+  },
+  "files": [
+    {
+      "file": "collection/receiver.py",
+      "source": "LoopNav/receiver.py",
+      "source_sha256": "54c526114939da3e9cb00139e53f869d3214491def19f5bdf4eabe3014beb897",
+      "release_sha256": "54c526114939da3e9cb00139e53f869d3214491def19f5bdf4eabe3014beb897"
+    },
+    {
+      "file": "collection/senderhl.js",
+      "source": "LoopNav/senderhl.js",
+      "source_sha256": "816f68b94a88aa831d6bd680208e0a0da4bde526db0c880910ac106375062b6a",
+      "release_sha256": "816f68b94a88aa831d6bd680208e0a0da4bde526db0c880910ac106375062b6a"
+    },
+    {
+      "file": "collection/run_navigation.py",
+      "source": "LoopNav/run_navigation.py",
+      "source_sha256": "7aa178044ca0b5b4b492ba7d72f56f6a5e700a4d7aebd6945975f0ae8b81917f",
+      "release_sha256": "a78d1718a9ebf4fd04bbca621c9d30757d20a1e9bbe5d5b5ffb0d6bd3f4624ca"
+    },
+    {
+      "file": "collection/run_turn.py",
+      "source": "LoopNav/run_trun.py",
+      "source_sha256": "ad659e78e3c777a3ad93f9da6a82fe0035ed348e7f97817cd2e5318f6f8cbca9",
+      "release_sha256": "d328e5422ef7630c132077f14bee89b1fafc3df56c470b4f3502e35b5c376a02"
+    },
+    {
+      "file": "collection/sender_turn.js",
+      "source": "LoopNav/sender_trun.js",
+      "source_sha256": "2d909932d039b9031abef65d9c9ca58f23f7ea1dd35dcbaec0c9e307bce29f73",
+      "release_sha256": "2d909932d039b9031abef65d9c9ca58f23f7ea1dd35dcbaec0c9e307bce29f73"
+    },
+    {
+      "file": "collection/legacy/run_aba_fixed.py",
+      "source": "LoopNav/run_aba_fixed.py",
+      "source_sha256": "98070004c1e74c8b1eda336d59000db6f6e84146c5a90c6a41854fd237fe9650",
+      "release_sha256": "3c330651339e0280321d3a44ce16b27cc0de69c62d3f8a796b07c9303cadde4a"
+    },
+    {
+      "file": "collection/legacy/run_abaca_fixed.py",
+      "source": "LoopNav/run_abaca_fixed.py",
+      "source_sha256": "9b440c157a367272d896e5c411f9752f36c5f86147c90ed2c93b2d1999721312",
+      "release_sha256": "bf12394f98ea6e7cd9d4e85f5d15107c77fc6d0cb87ae901760ffeccf4061090"
+    },
+    {
+      "file": "collection/trajectory_validation.py",
+      "source": "LoopNav/trajectory_validation.py",
+      "source_sha256": "d32975b34fb2c2501763234fbf7aaafa635600774e1991428e203a4f196ebb2f",
+      "release_sha256": "d32975b34fb2c2501763234fbf7aaafa635600774e1991428e203a4f196ebb2f"
+    },
+    {
+      "file": "collection/tests/test_trajectory_validation.py",
+      "source": "LoopNav/test_trajectory_validation.py",
+      "source_sha256": "0482911a464686fb5afb6c7002c9f49bec23c2962306cd953047a37dcebd5853",
+      "release_sha256": "335ab345e5e9fb58637c7c0af4cb6fe41f83f198a3bafc4b3a54535ef3011e74"
+    },
+    {
+      "file": "collection/smooth_camera.js",
+      "source": "LoopNav/smooth_camera.js",
+      "source_sha256": "125262e1d8f928c693935bbe2e8e9175897a68e5f300d139796d1e8a10e6d3a2",
+      "release_sha256": "125262e1d8f928c693935bbe2e8e9175897a68e5f300d139796d1e8a10e6d3a2"
+    },
+    {
+      "file": "collection/tests/smooth_camera.test.js",
+      "source": "LoopNav/smooth_camera.test.js",
+      "source_sha256": "1c512635b1247560ba75214eed8b0c91ca383bf8c09fda5374f6b6dfe6dec991",
+      "release_sha256": "25074198007c4eec6dafe83e5d2f6bc89fb6de705edbdfdfe869437a5aa7b0b0"
+    },
+    {
+      "file": "quality/audit_dataset_quality.py",
+      "source": "LoopNav/audit_dataset_quality.py",
+      "source_sha256": "1461b5108cc32db9a904866e9017e0387fc38438c64a6dbb3c7449053539279b",
+      "release_sha256": "a5f2c11042d0e1d085ea72cc40b9f7e0d4e16eb737637468376c39d72eed1ef6"
+    },
+    {
+      "file": "quality/remove_quality_audit_issues.py",
+      "source": "LoopNav/remove_quality_audit_issues.py",
+      "source_sha256": "1021cf557cf7c8bb43c13a7d0f9907ac688e8e974d352e5d74480e0c38eab2cd",
+      "release_sha256": "da5157d87fc9980528fd164e272a20bc9812c5c6e74eec5fe8b18fc17b0f4a09"
+    },
+    {
+      "file": "quality/audit_camera_discontinuities.py",
+      "source": "LoopNav/audit_camera_discontinuities.py",
+      "source_sha256": "0377986668c3b555513120a4015074b5fd49ea57150dc1932871f76170ebc198",
+      "release_sha256": "b612df59d6d248f1760cd687ffad26a7c872fec1cb91d65d91def9faddfd48df"
+    },
+    {
+      "file": "quality/remove_camera_discontinuities.py",
+      "source": "LoopNav/remove_camera_discontinuities.py",
+      "source_sha256": "6368dbdd8ea0f6bbf3940352cee3072e60363debdf07875e4d40d6eceee8b7b0",
+      "release_sha256": "e6338cb08f1196f5a9316922629bcc3224b115f830a0d519a687d1f72efddfc5"
+    },
+    {
+      "file": "quality/remove_zero_byte_orphans.py",
+      "source": "LoopNav/remove_zero_byte_orphans.py",
+      "source_sha256": "258d7211ae6317a9ad8e3f6ffba077faa41df26317e15b1194d1af15d2dfdec2",
+      "release_sha256": "258d7211ae6317a9ad8e3f6ffba077faa41df26317e15b1194d1af15d2dfdec2"
+    },
+    {
+      "file": "quality/trim_excess_trajectories.py",
+      "source": "LoopNav/trim_excess_trajectories.py",
+      "source_sha256": "3cf2e73adb32cae16e1632d3d64b7c4e83260b87a65978a7d27cf81ef9cb334a",
+      "release_sha256": "3cf2e73adb32cae16e1632d3d64b7c4e83260b87a65978a7d27cf81ef9cb334a"
+    },
+    {
+      "file": "quality/qc_aba_variance.py",
+      "source": "LoopNav/qc_aba_variance.py",
+      "source_sha256": "f1f33bd60c241d2f0aa0ce6ab89252bfc577bae25baf07f0527a64481a39a7a0",
+      "release_sha256": "7ef78b1527ef966fed3f2ecf066bb0fc76b0dd3b16e5ccc65df060156328aec9"
+    },
+    {
+      "file": "evaluation/sgcs_eval.py",
+      "source": "baseline/eval.py",
+      "source_sha256": "72f3ed156d648b843a8335fb0a06e38885d11852571e63531d66231b41198ec9",
+      "release_sha256": "3712eb27b54d0364cbe0dab74fe98a2b0fafdd041ef1ec78c94412179486f79a"
+    },
+    {
+      "file": "evaluation/controlled_perturbation.py",
+      "source": "baseline/evalablation.py",
+      "source_sha256": "7ef0644678d5162f85530ed90dbac8f1f1edd431db5bb5d4d28de77479306052",
+      "release_sha256": "5cdeb6b8f028582045132e678e81e015145226c40eb566373ddb6d459fe3b300"
+    },
+    {
+      "file": "evaluation/eval_turn_sgcs.py",
+      "source": "baseline/eval_turn_sgcs.py",
+      "source_sha256": "bf6e4373c190910a52b3ca3280bd10b2317e3b69fc3abf2a9267909bec7ed9a1",
+      "release_sha256": "29dc6ca99590ec11e102bcbb491a7b5b8818dac237a35868bc9b759d754a4e1d"
+    },
+    {
+      "file": "evaluation/eval_abaca_sgcs.py",
+      "source": "baseline/eval_abaca_sgcs.py",
+      "source_sha256": "8d3a03c8c3f87f99af70c159407c674186457febb6915c952b3384a26b47ea0e",
+      "release_sha256": "98765aec7b68f9e4c6713e3dcb4860298f04f850011372f6d2811b229dfb1144"
+    },
+    {
+      "file": "models/oasis/evaluate.py",
+      "source": "baseline/open-oasis-ori/evaluate.py",
+      "source_sha256": "7c757598b8145d044c17d2060952cd22a22e7e7fc27396524200e9406c05d76c",
+      "release_sha256": "a000fb06400d13e8236259de2cc3601c99d30cbe07b95dd2af71c438fdb1e865"
+    },
+    {
+      "file": "models/oasis/evaluate_turn.py",
+      "source": "baseline/open-oasis-ori/evaluate_turn.py",
+      "source_sha256": "7e41d18171b8748beb78e760f7b700d664a4ba48be9bdb1fbafe193e0556fce5",
+      "release_sha256": "81a3f7a9577d20ee2611e4f43ca2ec5328e85d1852354a28d82ad49e63acedf9"
+    },
+    {
+      "file": "models/oasis/utils.py",
+      "source": "baseline/open-oasis-ori/utils.py",
+      "source_sha256": "9169eb37978f1becc5896f657ddd7182c080931d4e308ebc1d424c1e7738a22c",
+      "release_sha256": "80d8d72a68a1e641d990b8b385facc149769f27b29d90bfd3a0fc2cd598f7481"
+    },
+    {
+      "file": "models/oasis/vae.py",
+      "source": "baseline/open-oasis-ori/vae.py",
+      "source_sha256": "5ffb8ab9908652b6246205791754c36731f03c5c31512fd6569affe7f3132084",
+      "release_sha256": "5ffb8ab9908652b6246205791754c36731f03c5c31512fd6569affe7f3132084"
+    },
+    {
+      "file": "models/oasis/LICENSE",
+      "source": "baseline/open-oasis-ori/LICENSE",
+      "source_sha256": "a677a3b16635512bc1dcbe0502ac8555702c7f4e3247ca6a94b8b83332f8ba9a",
+      "release_sha256": "a677a3b16635512bc1dcbe0502ac8555702c7f4e3247ca6a94b8b83332f8ba9a"
+    },
+    {
+      "file": "models/mineworld/inference.py",
+      "source": "baseline/mineworld/inference.py",
+      "source_sha256": "4cfc099454d7694e68e808be7cc27c4674c29eb140efa0e1bb1f1e2b97a5eb80",
+      "release_sha256": "681040d275bc623ff86d4c4e1b954628bcf0bfdaa1eb5860d375f8ea1bbad4cc"
+    },
+    {
+      "file": "models/mineworld/evaluate_turn.py",
+      "source": "baseline/mineworld/evaluate_turn.py",
+      "source_sha256": "0800b50a13d17ed53410de5a114041d477a8508eef90ae226fef29f16dedf811",
+      "release_sha256": "6ad0c7073cecdff9afa8e956502db5af15f32647e557971de192510c9b48e987"
+    },
+    {
+      "file": "models/mineworld/mcdataset.py",
+      "source": "baseline/mineworld/mcdataset.py",
+      "source_sha256": "7e8d16db01f085481d41d340e5a0b84669b8e163f3338d5fd572731532c52746",
+      "release_sha256": "df3110fa173da086c292df68228ba4f3a1455e289859a9da33a90a12d3ea02e7"
+    },
+    {
+      "file": "models/mineworld/lvm.py",
+      "source": "baseline/mineworld/lvm.py",
+      "source_sha256": "d4204b1a31b2742493f1398c4301b68168020dae38cbab513dbbc5cb3b8e3536",
+      "release_sha256": "35f5ef9325751b640f9b34162ca36eef13f77613219151a860a6f01d9b7c23f4"
+    },
+    {
+      "file": "models/mineworld/configs/1200M_16f.yaml",
+      "source": "baseline/mineworld/configs/1200M_16f.yaml",
+      "source_sha256": "099ca0b784d4f785fad8edcb391bb0e458e89dc07b2cb4b7d3b2ab6867cb80ee",
+      "release_sha256": "ee1fe9034eb73aa01a1db48d3c83c1d328286634d0d0d5405fa7dab2d0f410f5"
+    },
+    {
+      "file": "models/mineworld/configs/1200M_32f.yaml",
+      "source": "baseline/mineworld/configs/1200M_32f.yaml",
+      "source_sha256": "318510f415f1ef04b74a0ac63d70be30dba4afb09a7f5ff1cd1cf9ce45cb82d9",
+      "release_sha256": "948f667a64263b132331a07729139b9ae19712ffdfcdc73159ab70f14a520b2a"
+    },
+    {
+      "file": "models/mineworld/configs/300M_16f.yaml",
+      "source": "baseline/mineworld/configs/300M_16f.yaml",
+      "source_sha256": "8d675b074d1474ecf2a2596a60c124296d8074a209c42931d9634118d8c832a3",
+      "release_sha256": "106ee523088c429b9188f20ed23999012433a4c95b7332b810b7d418fcefc078"
+    },
+    {
+      "file": "models/mineworld/configs/700M_16f.yaml",
+      "source": "baseline/mineworld/configs/700M_16f.yaml",
+      "source_sha256": "99e114ac56e90d322ad79d144a63aae66fd6d77c9be0fe8bf1d901857b5ecb30",
+      "release_sha256": "6e1d71c334423aab182ffb0634a517f375298564d53afeed83fe09f31304a796"
+    },
+    {
+      "file": "models/mineworld/configs/700M_32f.yaml",
+      "source": "baseline/mineworld/configs/700M_32f.yaml",
+      "source_sha256": "38e4c1e89bbd3aa833bde82d87ce033a4de03d1a7c46b4f5814f4b80b7cd0cf6",
+      "release_sha256": "42faecfbfc7e6c3adcac3222d2729db4c9b1bb19e463901bd6ea49641bff09aa"
+    },
+    {
+      "file": "models/mineworld/LICENSE",
+      "source": "baseline/mineworld/LICENSE",
+      "source_sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "release_sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+    },
+    {
+      "file": "models/nwm/inference.py",
+      "source": "baseline/nwm/inference.py",
+      "source_sha256": "2857bbcd7f06e49b9c82b8bd3e63a04d470193d86c4a07f5eafa6c6624734aba",
+      "release_sha256": "2857bbcd7f06e49b9c82b8bd3e63a04d470193d86c4a07f5eafa6c6624734aba"
+    },
+    {
+      "file": "models/nwm/evaluate_turn.py",
+      "source": "baseline/nwm/evaluate_turn.py",
+      "source_sha256": "bff25a6f02aefdf8ebcd7f2266c059dca9bf7775ab4a2bc451d266589b8ee464",
+      "release_sha256": "3999e3804268008282d312c901608cdfd18951a5eff8a74c9aab7162a6365840"
+    },
+    {
+      "file": "models/nwm/datasets.py",
+      "source": "baseline/nwm/datasets.py",
+      "source_sha256": "085e324e13b50f981a51af40a293b74bc11d42284808802cbff412c6a54b093c",
+      "release_sha256": "2a21fa8f159b4c6198a10709aa65159ca62470e8e420c64ebc025cae9961671e"
+    },
+    {
+      "file": "models/nwm/train.py",
+      "source": "baseline/nwm/train.py",
+      "source_sha256": "0c816c3610faca816e129a113f7162033abd7b3eecd6f22394ff788209228e34",
+      "release_sha256": "0c816c3610faca816e129a113f7162033abd7b3eecd6f22394ff788209228e34"
+    },
+    {
+      "file": "models/nwm/processmc.py",
+      "source": "baseline/nwm/processmc.py",
+      "source_sha256": "d0df5f72826c08433ca6e209ff36eea359bd3c17764fd85110c3ffcdd8d1c370",
+      "release_sha256": "17307d82812f9a6a05036e03d333bcf8ab25245617c6cfbe2195c3a7a7042a2d"
+    },
+    {
+      "file": "models/nwm/config/data_config.yaml",
+      "source": "baseline/nwm/config/data_config.yaml",
+      "source_sha256": "253ec133185bf66c1ad214a34b36f76e7ca517c7c77e8af5717c9dbcc653493c",
+      "release_sha256": "253ec133185bf66c1ad214a34b36f76e7ca517c7c77e8af5717c9dbcc653493c"
+    },
+    {
+      "file": "models/nwm/config/eval_config.yaml",
+      "source": "baseline/nwm/config/eval_config.yaml",
+      "source_sha256": "65ac90017dc7c4a96bac8b50ee78ef345f6b5470710aea1b5ed38feb1823bb4f",
+      "release_sha256": "6fcab61497a4f81d891cb9d740fbf4eac6671cc04231668891b91c7adccb157a"
+    },
+    {
+      "file": "models/nwm/config/nwm_cdit_b.yaml",
+      "source": "baseline/nwm/config/nwm_cdit_b.yaml",
+      "source_sha256": "4e1b1cc41e1dc7869358907431aceb139759e1fc5b021758ab950ba025a675c5",
+      "release_sha256": "ea2852255616d927549daa43d32b9c376c3c4b1052eb5a8bab5c10a8d7abc2d4"
+    },
+    {
+      "file": "models/nwm/LICENSE.md",
+      "source": "baseline/nwm/LICENSE.md",
+      "source_sha256": "bc8f60ee50544b2dd70b4bc90e22de503aa23b317d284046a479811f2e06f396",
+      "release_sha256": "a7950c0fed88e9a177617e3836e9dc0ae4f4a96e59b15c3706de38ace171aca4"
+    },
+    {
+      "file": "models/diamond/src/inference.py",
+      "source": "baseline/diamond/src/inference.py",
+      "source_sha256": "42f379f8ba7b0aef1133605ee541ed1fe28327c3cfeed22c22263b79994b545e",
+      "release_sha256": "00c637c278fcc86244831d9a7731503832ffeb2340846fd562492c5a4dc3238a"
+    },
+    {
+      "file": "models/diamond/src/evaluate_turn.py",
+      "source": "baseline/diamond/src/evaluate_turn.py",
+      "source_sha256": "d35a84c3e80c5874fbba73a87cddcbccb63d6d9186f77f6505beef30c6cce939",
+      "release_sha256": "efe1aebd75af9f67c6d63c9e5122ecea58dedd5f62caa42b3d3a9a0fc9411f02"
+    },
+    {
+      "file": "models/diamond/src/data/MCdata.py",
+      "source": "baseline/diamond/src/data/MCdata.py",
+      "source_sha256": "7f4d9c07038d083855e49dbc92f7e88dc02fa483c4c9885770eddd06d9e6c1bf",
+      "release_sha256": "031b9ff935efc5ff1fd2368db5a7af1638e13b9f874304b42f4b209cb410a601"
+    },
+    {
+      "file": "models/diamond/src/envs/world_model_env.py",
+      "source": "baseline/diamond/src/envs/world_model_env.py",
+      "source_sha256": "c5329d05cf3b618aa676f47cf6a9bfcd6395f485399f8abf49be7e3b669dd24b",
+      "release_sha256": "c5329d05cf3b618aa676f47cf6a9bfcd6395f485399f8abf49be7e3b669dd24b"
+    },
+    {
+      "file": "models/diamond/src/trainer.py",
+      "source": "baseline/diamond/src/trainer.py",
+      "source_sha256": "d1289f4df8d240affdbc046304702795790aba9160bc7140ab652af0a70259ee",
+      "release_sha256": "554cc181f67af7e5d63ee45629e67ee9f01c931bc0705e4e05130ee6a2b5983a"
+    },
+    {
+      "file": "models/diamond/config/env/csgo.yaml",
+      "source": "baseline/diamond/config/env/csgo.yaml",
+      "source_sha256": "7b4c38c062bee63ef4d631e2a59e593650f0cbfa3cc93d80d9acb5dd2293c9fd",
+      "release_sha256": "d5a2ae36d724c8ef3e51ddf5d7b2116ec009fad4595af662868ecb6bd2bb9ca8"
+    },
+    {
+      "file": "models/diamond/config/trainer.yaml",
+      "source": "baseline/diamond/config/trainer.yaml",
+      "source_sha256": "8730e16486c106d8fe1d8b100ddcb8e681ce9e5511cc731e81be00ee16604b3d",
+      "release_sha256": "4d4da78eab1592e8dbfd5a5626e05fc239162e2f37e7584fe06f6059a4dda868"
+    },
+    {
+      "file": "models/diamond/config/world_model_env/fast.yaml",
+      "source": "baseline/diamond/config/world_model_env/fast.yaml",
+      "source_sha256": "461195eea376732d64ffb25f5bfd9682f8c4111311f725388101f44f981859e9",
+      "release_sha256": "67a10f580ea185a9c920a81c5ebace5861f5bc5988a21b8b095e74d80eb69d18"
+    },
+    {
+      "file": "models/diamond/config/world_model_env/higher_quality.yaml",
+      "source": "baseline/diamond/config/world_model_env/higher_quality.yaml",
+      "source_sha256": "b2b58b39b589372b1ef042d18c4fa496e65533f4c69efc0e76a08c59a0566e51",
+      "release_sha256": "b2b58b39b589372b1ef042d18c4fa496e65533f4c69efc0e76a08c59a0566e51"
+    },
+    {
+      "file": "models/diamond/LICENSE",
+      "source": "baseline/diamond/LICENSE",
+      "source_sha256": "dd560e2f73fe349c9b3ddcf74dd9e8757e414619a72ae07d06dfac4a0289c8f9",
+      "release_sha256": "dd560e2f73fe349c9b3ddcf74dd9e8757e414619a72ae07d06dfac4a0289c8f9"
+    },
+    {
+      "file": "models/worldmem/loopnav_eval.py",
+      "source": "baseline/WorldMem/loopnav_eval.py",
+      "source_sha256": "181dcfc528a93de298aa040aa31432c0a83812b806991602646609ae8e2042ae",
+      "release_sha256": "181dcfc528a93de298aa040aa31432c0a83812b806991602646609ae8e2042ae"
+    },
+    {
+      "file": "models/worldmem/worldmem_official_runtime.py",
+      "source": "baseline/WorldMem/worldmem_official_runtime.py",
+      "source_sha256": "0d2f869feeec3e1b0b9b7c734ae119ffe7424e9ee3ae22b4e13909eede0c89a3",
+      "release_sha256": "0d2f869feeec3e1b0b9b7c734ae119ffe7424e9ee3ae22b4e13909eede0c89a3"
+    },
+    {
+      "file": "models/worldmem/worldmem_official_loopnav.py",
+      "source": "baseline/WorldMem/worldmem_official_loopnav.py",
+      "source_sha256": "1893a047a551eb3f7f1dd2803d9432da70195d35aaa3b23870e058b8fd748e98",
+      "release_sha256": "1893a047a551eb3f7f1dd2803d9432da70195d35aaa3b23870e058b8fd748e98"
+    },
+    {
+      "file": "models/worldmem/configurations/worldmem_official_eval.yaml",
+      "source": "baseline/WorldMem/configurations/worldmem_official_eval.yaml",
+      "source_sha256": "13e9750ee2c1ff89b65902e85c3bf8defc0e43667893bfe8b361cff1426ec2fa",
+      "release_sha256": "13e9750ee2c1ff89b65902e85c3bf8defc0e43667893bfe8b361cff1426ec2fa"
+    },
+    {
+      "file": "models/worldmem/LICENSE.md",
+      "source": "baseline/WorldMem/LICENSE.md",
+      "source_sha256": "341b082419db3e09ad108157215becd8118eff613c930c4d3066b353a0b56160",
+      "release_sha256": "341b082419db3e09ad108157215becd8118eff613c930c4d3066b353a0b56160"
+    },
+    {
+      "file": "models/worldmem/loopnav_finetune_v2/__init__.py",
+      "source": "baseline/WorldMem/loopnav_finetune_v2/__init__.py",
+      "source_sha256": "e445333287f8bf92e4e18d5211f38a7bd3e7acac6e9657e9dd8760d7da2c6f68",
+      "release_sha256": "639e1d91d2f26c798c2f993dd0980cf50e5adfe406664df0475ceb2a50a14d89"
+    },
+    {
+      "file": "models/worldmem/loopnav_finetune_v2/data.py",
+      "source": "baseline/WorldMem/loopnav_finetune_v2/data.py",
+      "source_sha256": "b2ea5d43bfb63c46dd67aab28b6ce975fcb733bb86ad15fb00dce9c1b675ca80",
+      "release_sha256": "d199feba689823a3f09e35046de751e61b2a7c1d233abb17464604a8975a91cc"
+    },
+    {
+      "file": "models/worldmem/loopnav_finetune_v2/model.py",
+      "source": "baseline/WorldMem/loopnav_finetune_v2/model.py",
+      "source_sha256": "431a4b110690c5b86daa3b01a22a35a1a06049720fc546ae07dcd8036d70d9ce",
+      "release_sha256": "431a4b110690c5b86daa3b01a22a35a1a06049720fc546ae07dcd8036d70d9ce"
+    },
+    {
+      "file": "models/worldmem/loopnav_finetune_v2/train.py",
+      "source": "baseline/WorldMem/loopnav_finetune_v2/train.py",
+      "source_sha256": "8fd7366d9199e641630833f37cc4c10a5f1a29313c295de97acee60c66dafa1c",
+      "release_sha256": "8fd7366d9199e641630833f37cc4c10a5f1a29313c295de97acee60c66dafa1c"
+    },
+    {
+      "file": "models/worldmem/loopnav_finetune_v2/rollout_adapters.py",
+      "source": "baseline/WorldMem/loopnav_finetune_v2/rollout_adapters.py",
+      "source_sha256": "4d37c8cb5bcb5afc38d2c23d1137976ac27f53fd9ccd121cda0dd329f320c5af",
+      "release_sha256": "870740693086c8747921453b96255a72e5b44ee8e27743d0a825273e3eaa8506"
+    },
+    {
+      "file": "models/worldmem/loopnav_finetune_v2/batch_rollout_adapters.py",
+      "source": "baseline/WorldMem/loopnav_finetune_v2/batch_rollout_adapters.py",
+      "source_sha256": "caee8114cad41c7e3246a3997fd64152c14e70e81d98ad8cdfd004e117a1ab66",
+      "release_sha256": "caee8114cad41c7e3246a3997fd64152c14e70e81d98ad8cdfd004e117a1ab66"
+    },
+    {
+      "file": "models/worldmem/loopnav_finetune_v2/validate_adapters.py",
+      "source": "baseline/WorldMem/loopnav_finetune_v2/validate_adapters.py",
+      "source_sha256": "ce8732e48a7da4a9842f85695e29e9329cda3eb3a4c60460da174583ac5089a3",
+      "release_sha256": "ce8732e48a7da4a9842f85695e29e9329cda3eb3a4c60460da174583ac5089a3"
+    },
+    {
+      "file": "models/worldmem/loopnav_finetune_v2/eval_sgcs_manifest.py",
+      "source": "baseline/WorldMem/loopnav_finetune_v2/eval_sgcs_manifest.py",
+      "source_sha256": "b22b19ea55a4f6411f00e0bdf71ce144befb5515c931a85be1fdab877ad73d7a",
+      "release_sha256": "39fba7086f3f7b668ebaa3cff24cc5808b598cf04413f33c6cf118249c83ed48"
+    },
+    {
+      "file": "models/worldmem/loopnav_finetune_v2/config_p1.yaml",
+      "source": "baseline/WorldMem/loopnav_finetune_v2/config_p1.yaml",
+      "source_sha256": "3854aa9e19aa0c9f06512cddc64d188677c8a353d3d973df70a80c60a1373e80",
+      "release_sha256": "252a88dadb99a9722bbbc5be1c1c174020d9c3b08583d572676e80214a058e66"
+    },
+    {
+      "file": "models/worldmem/loopnav_finetune_v2/tests/test_data.py",
+      "source": "baseline/WorldMem/loopnav_finetune_v2/tests/test_data.py",
+      "source_sha256": "e2b85b15b33886dc284dbcae2b42764a2a52809dee9af67283db7c413825bf82",
+      "release_sha256": "443923d4a9b84c92421618e457191f76cee831ecafaafb382026bb2e00c2b249"
+    },
+    {
+      "file": "models/worldmem/loopnav_finetune_v2/tests/test_model.py",
+      "source": "baseline/WorldMem/loopnav_finetune_v2/tests/test_model.py",
+      "source_sha256": "e69c71d5d5b79c085da685f283e6b238d49f86080e83bc67ce526c50279cd471",
+      "release_sha256": "94cef5ce75c8a3b07bfab18527514d3e942ea4a15bda687cf6e681015d527cb7"
+    },
+    {
+      "file": "models/worldmem/loopnav_finetune_v2/tests/run_tests.py",
+      "source": "baseline/WorldMem/loopnav_finetune_v2/tests/run_tests.py",
+      "source_sha256": "0148d717fe4ddecc9b467c0fe5a18d88d56dfc4c5ac54bf79f646999fbe13f80",
+      "release_sha256": "b3243956e6388ecff3c99511764587cc36c3e6a495609e4f6f799f37742a991f"
+    }
+  ],
+  "packaging_notes": [
+    "Model directories are overlays for the pinned upstream revisions; source_sha256 identifies the local research source and release_sha256 identifies the packaged file.",
+    "Host-specific paths were replaced with portable defaults or explicit CLI/configuration paths. SGCS helper imports use the public sgcs_eval module name.",
+    "WorldMem supports public ABA directory naming, resolves the shared metric with LOOPNAV_METRICS_DIR, and defaults to the 20000-step configuration. Real-data tests are opt-in.",
+    "OASIS initializes model weights after argument parsing and accepts checkpoint/device arguments.",
+    "NWM preprocessing now writes the trajectory pickle and unpadded JPEG filenames required by the pinned upstream dataset loader; training metric dependencies are listed separately.",
+    "The frozen 720-sample manifest replaces local one-off selection/repair scripts. Archived score exports preserve original source-result hashes.",
+    "Repository layout: collection, quality, models, evaluation, benchmark, and docs. Runtime paths, shared imports, result-manifest links, and documentation were updated for this organization; benchmark scores are unchanged."
+  ]
+}

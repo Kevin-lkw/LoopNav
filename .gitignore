@@ -9,7 +9,7 @@ venv/
 /data/
 /output*/
 /results/
-/baseline/benchmark/prepared/
+/benchmark/prepared/
 **/checkpoints/
 **/runs/
 **/wandb/
@@ -23,3 +23,6 @@ venv/
 *.tar
 *.tar.gz
 /predictions/
+/evaluation/sam3/
+/collection/data/
+/collection/output*/
