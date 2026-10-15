@@ -1,9 +1,11 @@
 {
-    "dependencies": {
-      "canvas": "^3.1.0",
-      "node-canvas-webgl": "^0.3.0",
-      "mineflayer": "github:Kevin-lkw/mineflayer",
-      "mineflayer-pathfinder": "github:Kevin-lkw/mineflayer-pathfinder",
-      "prismarine-viewer": "github:Kevin-lkw/prismarine-viewer"
-    }
+  "dependencies": {
+    "canvas": "^3.1.0",
+    "node-canvas-webgl": "^0.3.0",
+    "mineflayer": "github:Kevin-lkw/mineflayer",
+    "mineflayer-pathfinder": "github:Kevin-lkw/mineflayer-pathfinder",
+    "prismarine-viewer": "github:Kevin-lkw/prismarine-viewer",
+    "minimist": "^1.2.8",
+    "vec3": "^0.1.10"
   }
+}

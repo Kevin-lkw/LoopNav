@@ -4,9 +4,10 @@ References:
 """
 
 import torch
+import av
 from dit import DiT_models
 from vae import VAE_models
-from torchvision.io import read_video, write_video
+from torchvision.io import read_video
 from utils import load_prompt, load_actions, sigmoid_beta_schedule, get_offset_actions
 from tqdm import tqdm
 from einops import rearrange
@@ -16,30 +17,33 @@ import argparse
 from pprint import pprint
 import os
 
-assert torch.cuda.is_available()
-device = "cuda"
+def initialize_models(args):
+    global model, vae, device
+    device = args.device
+    if device.startswith("cuda") and not torch.cuda.is_available():
+        raise RuntimeError("CUDA is not available")
 
-oasis_ckpt = "oasis500m.safetensors"
-vae_ckpt = "vit-l-20.safetensors"
-# load DiT checkpoint
-model = DiT_models["DiT-S/2"]()
-print(f"loading Oasis-500M from oasis-ckpt={os.path.abspath(oasis_ckpt)}...")
-if oasis_ckpt.endswith(".pt"):
-    ckpt = torch.load(oasis_ckpt, weights_only=True)
-    model.load_state_dict(ckpt, strict=False)
-elif oasis_ckpt.endswith(".safetensors"):
-    load_model(model, oasis_ckpt)
-model = model.to(device).eval()
+    oasis_ckpt = args.oasis_ckpt
+    vae_ckpt = args.vae_ckpt
+    # load DiT checkpoint
+    model = DiT_models["DiT-S/2"]()
+    print(f"loading Oasis-500M from oasis-ckpt={os.path.abspath(oasis_ckpt)}...")
+    if oasis_ckpt.endswith(".pt"):
+        ckpt = torch.load(oasis_ckpt, weights_only=True)
+        model.load_state_dict(ckpt, strict=False)
+    elif oasis_ckpt.endswith(".safetensors"):
+        load_model(model, oasis_ckpt)
+    model = model.to(device).eval()
 
-# load VAE checkpoint
-vae = VAE_models["vit-l-20-shallow-encoder"]()
-print(f"loading ViT-VAE-L/20 from vae-ckpt={os.path.abspath(vae_ckpt)}...")
-if vae_ckpt.endswith(".pt"):
-    vae_ckpt = torch.load(vae_ckpt, weights_only=True)
-    vae.load_state_dict(vae_ckpt)
-elif vae_ckpt.endswith(".safetensors"):
-    load_model(vae, vae_ckpt)
-vae = vae.to(device).eval()
+    # load VAE checkpoint
+    vae = VAE_models["vit-l-20-shallow-encoder"]()
+    print(f"loading ViT-VAE-L/20 from vae-ckpt={os.path.abspath(vae_ckpt)}...")
+    if vae_ckpt.endswith(".pt"):
+        vae_ckpt = torch.load(vae_ckpt, weights_only=True)
+        vae.load_state_dict(vae_ckpt)
+    elif vae_ckpt.endswith(".safetensors"):
+        load_model(vae, vae_ckpt)
+    vae = vae.to(device).eval()
 
 def main(args,loc,length,name):
     torch.manual_seed(0)
@@ -145,32 +149,62 @@ def main(args,loc,length,name):
             x[:, -1:] = x_pred[:, -1:]
 
 
-    # vae decoding
+    # Decode and encode generated frames incrementally.  Keeping all decoded
+    # 360x640 float frames on the GPU requires more than 8 GiB for long ABACA
+    # trajectories and previously caused an OOM after generation had finished.
     x = rearrange(x, "b t c h w -> (b t) (h w) c")
-    # import ipdb; ipdb.set_trace()
-    with torch.no_grad():
-        chunk_size = 16
-        decoded_list = []
-        for i in range(0, x.shape[0], chunk_size):
-            if i + chunk_size > x.shape[0]:
-                chunk_size = x.shape[0] - i
-            
-            decoded = (vae.decode(x[i:i+chunk_size] / scaling_factor) + 1) / 2
-            # import ipdb; ipdb.set_trace()
-            decoded_list.append(decoded)
-        x = torch.cat(decoded_list, dim=0)
-    x = rearrange(x, "(b t) c h w -> b t h w c", t=total_frames)
-    x = x[:, n_prompt_frames:]
-    print ("final x shape:", x.shape)
-    # save video
-    x = torch.clamp(x, 0, 1)
-    
-    x = (x * 255).byte()
     output_path = os.path.join(args.output_path, nvtype, str(length), loc)
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    write_video(os.path.join(output_path, f"{name}.mp4"), x[0].cpu(), fps=args.fps)
-    print(f"generation saved to {output_path}.")
+    os.makedirs(output_path, exist_ok=True)
+    output_file = os.path.join(output_path, f"{name}.mp4")
+    temporary_output_file = output_file + ".tmp.mp4"
+    if os.path.exists(temporary_output_file):
+        os.remove(temporary_output_file)
+
+    generated_frame_count = total_frames - n_prompt_frames
+    print(
+        "streaming decoded output:",
+        (generated_frame_count, H, W, 3),
+    )
+    try:
+        with av.open(temporary_output_file, mode="w") as container:
+            stream = container.add_stream("libx264", rate=args.fps)
+            stream.width = W
+            stream.height = H
+            stream.pix_fmt = "yuv420p"
+            stream.options = {}
+
+            with torch.no_grad():
+                chunk_size = 16
+                for start in tqdm(
+                    range(n_prompt_frames, x.shape[0], chunk_size),
+                    desc="Decoding and encoding frames",
+                ):
+                    end = min(start + chunk_size, x.shape[0])
+                    decoded = (
+                        vae.decode(x[start:end] / scaling_factor) + 1
+                    ) / 2
+                    decoded = (
+                        decoded.clamp_(0, 1)
+                        .mul_(255)
+                        .byte()
+                        .permute(0, 2, 3, 1)
+                        .cpu()
+                        .numpy()
+                    )
+                    for image in decoded:
+                        frame = av.VideoFrame.from_ndarray(image, format="rgb24")
+                        frame.pict_type = "NONE"
+                        for packet in stream.encode(frame):
+                            container.mux(packet)
+
+            for packet in stream.encode():
+                container.mux(packet)
+        os.replace(temporary_output_file, output_file)
+    except Exception:
+        if os.path.exists(temporary_output_file):
+            os.remove(temporary_output_file)
+        raise
+    print(f"generation saved to {output_file}.")
 
 
 if __name__ == "__main__":
@@ -181,13 +215,13 @@ if __name__ == "__main__":
         type=str,
         help="Path to image or video to condition generation on.",
         # default="sample_data/sample_image_0.png",
-        default="./data/ABA/snowy_village_1/15/05-04_13-57-20.avi"
+        default="data/LoopNav/ABA/snowy_village_1/15/05-04_13-57-20.avi"
     )
     parse.add_argument(
         "--actions-path",
         type=str,
         help="File to load actions from (.actions.pt or .one_hot_actions.pt)",
-        default="./data/ABA/snowy_village_1/15/05-04_13-57-20.json",
+        default="data/LoopNav/ABA/snowy_village_1/15/05-04_13-57-20.json",
     )
     parse.add_argument(
         "--n-prompt-frames",
@@ -214,19 +248,37 @@ if __name__ == "__main__":
         default=10,
     )
     parse.add_argument("--ddim-steps", type=int, help="How many DDIM steps?", default=10)
+    parse.add_argument("--data-root", type=str, default="../test_data")
+    parse.add_argument("--nvtype", type=str, default="ABA")
+    parse.add_argument("--village-ids", nargs="+", default=["18", "19", "20"])
+    parse.add_argument("--lengths", nargs="+", type=int, default=[5, 15, 30, 50])
+    parse.add_argument("--oasis-ckpt", default="oasis500m.safetensors")
+    parse.add_argument("--vae-ckpt", default="vit-l-20.safetensors")
+    parse.add_argument("--device", default="cuda")
     args = parse.parse_args()
-    # args.prompt_path = "./data/ABA/plains_village_1/15/05-04_14-11-01.avi"
-    # args.actions_path = "./data/ABA/plains_village_1/15/05-04_14-11-01.json"
-    for nvtype in ["ABA","ABCA"]:
-        for length in [5,15,30,50]:
-            for loc in ["snowy_village_20", "desert_village_20", "plains_village_20", "taiga_village_20", "savanna_village_20", "zombie_village_20"]:
-                path = "../test_data_more/" + nvtype + "/" + str(length) + "/" + loc
-                file_list = os.listdir(path)
-                file_list.sort()
-                for i in range(0,len(file_list),2):
-                    args.prompt_path = os.path.join(path, file_list[i])
-                    args.actions_path = os.path.join(path, file_list[i+1])
+    initialize_models(args)
+    # args.prompt_path = "data/LoopNav/ABA/plains_village_1/15/05-04_14-11-01.avi"
+    # args.actions_path = "data/LoopNav/ABA/plains_village_1/15/05-04_14-11-01.json"
+    for nvtype in [args.nvtype]:
+        for length in args.lengths:
+            dataset_dir = os.path.join(args.data_root, nvtype, str(length))
+            locations = sorted(
+                name for name in os.listdir(dataset_dir)
+                if os.path.isdir(os.path.join(dataset_dir, name))
+                and name.rsplit('_', 1)[-1] in args.village_ids
+            )
+            for loc in locations:
+                path = os.path.join(dataset_dir, loc)
+                video_names = sorted(name for name in os.listdir(path) if name.endswith('.avi'))
+                for video_name in video_names:
+                    name = os.path.splitext(video_name)[0]
+                    output_file = os.path.join(args.output_path, nvtype, str(length), loc, f"{name}.mp4")
+                    if os.path.exists(output_file):
+                        print(f"skipping existing {output_file}")
+                        continue
+                    args.prompt_path = os.path.join(path, video_name)
+                    args.actions_path = os.path.join(path, f"{name}.json")
 
                     print("inference args:")
                     pprint(vars(args))
-                    main(args,loc,length,file_list[i].split(".")[0])
+                    main(args,loc,length,name)

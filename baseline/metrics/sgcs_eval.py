@@ -28,13 +28,52 @@ DEFAULT_CATEGORIES = [
     "tree",
     "flower",
     "grass",
-    "path",
     "water",
     "sky",
     "sand",
     "dirt",
-    "snow",
 ]
+
+# Audit-calibrated evaluator configuration.  `path` is intentionally not a
+# separate category: the `dirt` prompt is evaluated against the merged
+# dirt/path ground semantics established by the object-level audit.
+SGCS_PIPELINE_VERSION = "sam3_audit_v2_house_merged_ground_20260801"
+DEFAULT_CATEGORY_PROMPTS = {
+    "building": "house",
+}
+DEFAULT_CATEGORY_MERGES = {"dirt": ["dirt", "path"]}
+
+
+def resolved_category_prompts(categories: list[str]) -> dict[str, str]:
+    """Return the exact SAM text prompt used for every semantic category."""
+    return {
+        category: DEFAULT_CATEGORY_PROMPTS.get(category, category)
+        for category in categories
+    }
+
+
+def resolved_category_merges(categories: list[str]) -> dict[str, list[str]]:
+    """Return audited semantic-label merges active in this evaluation."""
+    return {
+        category: list(DEFAULT_CATEGORY_MERGES[category])
+        for category in categories
+        if category in DEFAULT_CATEGORY_MERGES
+    }
+
+DEFAULT_GT_ROOT = Path("baseline/benchmark/prepared/gt")
+
+DEFAULT_BASELINES = {
+    name: Path("predictions") / name
+    for name in ("oasis", "mineworld", "nwm", "diamond")
+}
+DEFAULT_PATH_TYPES = ["ABA_FIXED", "ABCA"]
+DEFAULT_LENGTHS = ["5", "15", "30", "50"]
+DEFAULT_VILLAGES = [
+    f"{biome}_village_{village_id}"
+    for village_id in (19, 20)
+    for biome in ("desert", "plains", "savanna", "snowy", "taiga", "zombie")
+]
+VIDEO_EXTENSIONS = {".avi", ".mp4", ".mov", ".mkv"}
 
 
 def ensure_local_sam3_importable() -> None:
@@ -47,11 +86,45 @@ def ensure_local_sam3_importable() -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Compute SAM3-based Scene Graph Consistency Score for two videos."
+            "Compute SAM3-based SGCS for one video pair or for a GT/baseline "
+            "directory tree."
         )
     )
-    parser.add_argument("--video_a", type=Path, required=True)
-    parser.add_argument("--video_b", type=Path, required=True)
+    parser.add_argument("--video_a", type=Path, default=None)
+    parser.add_argument("--video_b", type=Path, default=None)
+    parser.add_argument(
+        "--baseline",
+        choices=sorted(DEFAULT_BASELINES),
+        default=None,
+        help="Named baseline root for dataset evaluation.",
+    )
+    parser.add_argument(
+        "--baseline-root",
+        type=Path,
+        default=None,
+        help="Custom baseline root. Overrides --baseline path when both are set.",
+    )
+    parser.add_argument("--baseline-name", default=None, help="Name used in output JSON.")
+    parser.add_argument("--gt-root", type=Path, default=DEFAULT_GT_ROOT)
+    parser.add_argument("--path-types", nargs="+", default=DEFAULT_PATH_TYPES)
+    parser.add_argument("--lengths", nargs="+", default=DEFAULT_LENGTHS)
+    parser.add_argument("--villages", nargs="+", default=DEFAULT_VILLAGES)
+    parser.add_argument(
+        "--trajectory-index",
+        type=int,
+        default=0,
+        help="Sorted GT trajectory index to evaluate in each village.",
+    )
+    parser.add_argument(
+        "--eval-all-trajectories",
+        action="store_true",
+        help="Deprecated alias for --all.",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Evaluate every trajectory with a matching generated-video stem.",
+    )
     parser.add_argument("--stride", type=int, default=5, help="Frame sampling stride")
     parser.add_argument(
         "--tau",
@@ -69,7 +142,11 @@ def parse_args() -> argparse.Namespace:
         "--categories",
         nargs="+",
         default=DEFAULT_CATEGORIES,
-        help="Text prompts/categories to evaluate",
+        help=(
+            "Semantic categories to evaluate. The default prompt mapping uses "
+            "'house' for building; path is merged into dirt and is not run as "
+            "a separate prompt."
+        ),
     )
     parser.add_argument(
         "--checkpoint",
@@ -87,7 +164,22 @@ def parse_args() -> argparse.Namespace:
         "--output",
         type=Path,
         default=None,
-        help="Output JSON path. Defaults to sgcs_results.json.",
+        help="Single-pair output path. Dataset mode writes one JSON per path/length.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Directory for dataset evaluation JSON files.",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help=(
+            "Resume dataset evaluation from a per-video partial checkpoint, "
+            "or skip a completed path/length JSON when its pipeline and "
+            "evaluation configuration match this run and it has no failures."
+        ),
     )
     parser.add_argument(
         "--vis-output",
@@ -106,6 +198,69 @@ def open_video(path: Path) -> cv2.VideoCapture:
     if not cap.isOpened():
         raise RuntimeError(f"Failed to open video: {path}")
     return cap
+
+
+def list_videos(directory: Path) -> list[Path]:
+    if not directory.exists():
+        return []
+    return sorted(
+        path
+        for path in directory.iterdir()
+        if path.is_file() and path.suffix.lower() in VIDEO_EXTENSIONS
+    )
+
+
+def read_explicit_return_point(metadata_path: Path) -> int:
+    if not metadata_path.is_file():
+        raise FileNotFoundError(f"Missing trajectory metadata: {metadata_path}")
+    records = json.loads(metadata_path.read_text(encoding="utf-8"))
+    if not isinstance(records, list):
+        raise ValueError(f"Trajectory metadata must be a list: {metadata_path}")
+    points = [
+        index
+        for index, record in enumerate(records)
+        if isinstance(record, dict) and record.get("return_point") is True
+    ]
+    if len(points) != 1:
+        raise ValueError(
+            f"Expected exactly one return_point in {metadata_path}, found {points}"
+        )
+    return int(points[0])
+
+
+def pick_video_pairs(
+    gt_dir: Path,
+    baseline_dir: Path,
+    trajectory_index: int,
+    eval_all_trajectories: bool,
+) -> list[tuple[Path, Path]]:
+    gt_videos = list_videos(gt_dir)
+    baseline_videos = list_videos(baseline_dir)
+    baseline_by_stem = {path.stem: path for path in baseline_videos}
+    if eval_all_trajectories:
+        return [
+            (gt_video, baseline_by_stem[gt_video.stem])
+            for gt_video in gt_videos
+            if gt_video.stem in baseline_by_stem
+        ]
+
+    if not gt_videos:
+        raise FileNotFoundError(f"No GT videos found in {gt_dir}")
+    if trajectory_index < 0 or trajectory_index >= len(gt_videos):
+        raise IndexError(
+            f"--trajectory-index {trajectory_index} out of range for {gt_dir}; "
+            f"found {len(gt_videos)} GT videos"
+        )
+
+    gt_video = gt_videos[trajectory_index]
+    if gt_video.stem in baseline_by_stem:
+        return [(gt_video, baseline_by_stem[gt_video.stem])]
+    if trajectory_index < len(baseline_videos):
+        return [(gt_video, baseline_videos[trajectory_index])]
+    raise FileNotFoundError(
+        f"No baseline video matching {gt_video.stem} and no index "
+        f"{trajectory_index} fallback in {baseline_dir}"
+    )
 
 
 def get_frame_count(cap: cv2.VideoCapture) -> int:
@@ -284,8 +439,9 @@ def compute_frame_sgcs(
     weighted_sum = 0.0
     total_weight = 0.0
     for category in categories:
-        masks_a = segment_with_prompt(processor, state_a, category)
-        masks_b = segment_with_prompt(processor, state_b, category)
+        prompt = DEFAULT_CATEGORY_PROMPTS.get(category, category)
+        masks_a = segment_with_prompt(processor, state_a, prompt)
+        masks_b = segment_with_prompt(processor, state_b, prompt)
         result = score_category(masks_a, masks_b, height, width, tau)
         category_results[category] = result
         weighted_sum += result["weight"] * result["score"]
@@ -392,6 +548,9 @@ def evaluate_video_pair(
     video_b: Path,
     args: argparse.Namespace,
     categories: list[str],
+    frame_offset_a: int | None = None,
+    frame_offset_b: int | None = None,
+    alignment: str = "tail",
 ) -> dict[str, Any]:
     cap_a = open_video(video_a)
     cap_b = open_video(video_b)
@@ -400,15 +559,35 @@ def evaluate_video_pair(
     known_counts = [c for c in [count_a, count_b] if c > 0]
     if not known_counts:
         raise RuntimeError("Could not determine frame counts from either video")
-    frame_count = min(known_counts)
+
+    if (frame_offset_a is None) != (frame_offset_b is None):
+        raise ValueError("Both frame offsets must be provided together")
+    if frame_offset_a is None:
+        offset_a = 0
+        offset_b = 0
+        if count_a > 0 and count_b > 0:
+            if count_a > count_b:
+                offset_a = count_a - count_b
+            elif count_b > count_a:
+                offset_b = count_b - count_a
+    else:
+        offset_a = int(frame_offset_a)
+        offset_b = int(frame_offset_b)
+
+    if offset_a < 0 or offset_b < 0:
+        raise ValueError(f"Frame offsets must be non-negative: {offset_a}, {offset_b}")
+    available_counts = []
+    if count_a > 0:
+        available_counts.append(count_a - offset_a)
+    if count_b > 0:
+        available_counts.append(count_b - offset_b)
+    if not available_counts or min(available_counts) <= 0:
+        raise ValueError(
+            "No overlapping frames after alignment: "
+            f"counts=({count_a}, {count_b}) offsets=({offset_a}, {offset_b})"
+        )
+    frame_count = min(available_counts)
     sampled_indices = list(range(0, frame_count, args.stride))
-    offset_a = 0
-    offset_b = 0
-    if count_a > 0 and count_b > 0:
-        if count_a > count_b:
-            offset_a = count_a - count_b
-        elif count_b > count_a:
-            offset_b = count_b - count_a
 
     autocast_context = (
         torch.autocast(device_type="cuda", dtype=torch.bfloat16)
@@ -455,6 +634,7 @@ def evaluate_video_pair(
 
     mean_sgcs = float(np.mean([item["sgcs"] for item in results])) if results else 0.0
     output = {
+        "sgcs_pipeline_version": SGCS_PIPELINE_VERSION,
         "video_a": str(video_a),
         "video_b": str(video_b),
         "video_a_frame_count": count_a,
@@ -463,8 +643,12 @@ def evaluate_video_pair(
         "tau": args.tau,
         "confidence_threshold": args.confidence_threshold,
         "categories": categories,
+        "category_prompts": resolved_category_prompts(categories),
+        "category_merges": resolved_category_merges(categories),
+        "alignment": alignment,
         "video_a_frame_offset": offset_a,
         "video_b_frame_offset": offset_b,
+        "overlap_frame_count": frame_count,
         "num_sampled_frames": len(results),
         "mean_sgcs": mean_sgcs,
         "frames": results,
@@ -477,6 +661,9 @@ def evaluate_video_pair(
 def write_single_pair_result(
     processor: Any, args: argparse.Namespace, categories: list[str]
 ) -> None:
+    if args.video_a is None or args.video_b is None:
+        raise ValueError("Single-pair mode requires both --video_a and --video_b")
+
     output = evaluate_video_pair(
         processor=processor,
         video_a=args.video_a,
@@ -495,16 +682,214 @@ def write_single_pair_result(
         print(f"wrote visualization: {args.vis_output}")
 
 
+def resolve_baseline(args: argparse.Namespace) -> tuple[str, Path]:
+    if args.baseline_root is not None:
+        name = args.baseline_name or args.baseline or args.baseline_root.name
+        return name, args.baseline_root
+    if args.baseline is None:
+        raise ValueError("Dataset mode requires --baseline or --baseline-root")
+    return args.baseline_name or args.baseline, DEFAULT_BASELINES[args.baseline]
+
+
+def write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+    """Write JSON without exposing a truncated checkpoint to a resumed worker."""
+    temporary = path.with_name(f".{path.name}.tmp")
+    temporary.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    temporary.replace(path)
+
+
+def write_dataset_results(
+    processor: Any, args: argparse.Namespace, categories: list[str]
+) -> None:
+    baseline_name, baseline_root = resolve_baseline(args)
+    eval_all = args.all or args.eval_all_trajectories
+    is_legacy_single_trajectory_nwm = (
+        baseline_root.resolve() == DEFAULT_BASELINES["nwm"].resolve()
+    )
+    if (
+        eval_all
+        and is_legacy_single_trajectory_nwm
+        and "ABA_FIXED" not in args.path_types
+    ):
+        raise ValueError("NWM does not support --all because it has one trajectory only")
+
+    output_dir = args.output_dir or Path("./eval_SGCS_all" if eval_all else "./eval_SGCS")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    for path_type in args.path_types:
+        for length in args.lengths:
+            output_path = output_dir / f"{baseline_name}_{path_type}_{length}.json"
+            partial_path = output_path.with_suffix(f"{output_path.suffix}.partial")
+            expected = {
+                "sgcs_pipeline_version": SGCS_PIPELINE_VERSION,
+                "baseline": baseline_name,
+                "baseline_root": str(baseline_root),
+                "gt_root": str(args.gt_root),
+                "path_type": path_type,
+                "length": str(length),
+                "stride": args.stride,
+                "tau": args.tau,
+                "confidence_threshold": args.confidence_threshold,
+                "categories": categories,
+                "category_prompts": resolved_category_prompts(categories),
+                "category_merges": resolved_category_merges(categories),
+                "trajectory_index": args.trajectory_index,
+                "all": eval_all,
+                "eval_all_trajectories": eval_all,
+            }
+            if args.resume and output_path.is_file():
+                try:
+                    existing = json.loads(output_path.read_text(encoding="utf-8"))
+                    if (
+                        all(existing.get(key) == value for key, value in expected.items())
+                        and int(existing.get("num_videos", 0)) > 0
+                        and not existing.get("failures")
+                    ):
+                        print(f"resume: skipping complete output {output_path}")
+                        continue
+                except (OSError, ValueError, TypeError, json.JSONDecodeError):
+                    pass
+            videos = []
+            failures = []
+            if args.resume and partial_path.is_file():
+                try:
+                    partial = json.loads(partial_path.read_text(encoding="utf-8"))
+                    if all(
+                        partial.get(key) == value for key, value in expected.items()
+                    ):
+                        videos = list(partial.get("videos", []))
+                        print(
+                            f"resume: loaded {len(videos)} completed videos from "
+                            f"{partial_path}"
+                        )
+                except (OSError, ValueError, TypeError, json.JSONDecodeError):
+                    pass
+            completed_pairs = {
+                (str(item.get("video_a")), str(item.get("video_b")))
+                for item in videos
+            }
+            for village in args.villages:
+                gt_dir = args.gt_root / path_type / str(length) / village
+                baseline_dir = baseline_root / path_type / str(length) / village
+                try:
+                    pairs = pick_video_pairs(
+                        gt_dir=gt_dir,
+                        baseline_dir=baseline_dir,
+                        trajectory_index=args.trajectory_index,
+                        eval_all_trajectories=eval_all,
+                    )
+                    for pair_index, (gt_video, baseline_video) in enumerate(pairs):
+                        pair_key = (str(gt_video), str(baseline_video))
+                        if pair_key in completed_pairs:
+                            print(
+                                "resume: skipping completed video pair "
+                                f"{gt_video.name} / {baseline_video.name}"
+                            )
+                            continue
+                        trajectory_index = (
+                            pair_index if eval_all else args.trajectory_index
+                        )
+                        frame_offset_a = None
+                        frame_offset_b = None
+                        alignment = "tail"
+                        if path_type == "ABA_FIXED":
+                            frame_offset_a = read_explicit_return_point(
+                                gt_video.with_suffix(".json")
+                            )
+                            frame_offset_b = 0
+                            alignment = "metadata_return_point"
+                        print(
+                            "evaluating "
+                            f"{baseline_name} {path_type} {length} {village} "
+                            f"traj={trajectory_index}: {gt_video.name} "
+                            f"alignment={alignment}"
+                        )
+                        result = evaluate_video_pair(
+                            processor=processor,
+                            video_a=gt_video,
+                            video_b=baseline_video,
+                            args=args,
+                            categories=categories,
+                            frame_offset_a=frame_offset_a,
+                            frame_offset_b=frame_offset_b,
+                            alignment=alignment,
+                        )
+                        result["village"] = village
+                        result["path_type"] = path_type
+                        result["length"] = str(length)
+                        result["trajectory_index"] = trajectory_index
+                        videos.append(result)
+                        completed_pairs.add(pair_key)
+                        checkpoint_scores = [item["mean_sgcs"] for item in videos]
+                        checkpoint = {
+                            **expected,
+                            "num_videos": len(videos),
+                            "mean_sgcs": float(np.mean(checkpoint_scores)),
+                            "std_sgcs": float(np.std(checkpoint_scores)),
+                            "videos": videos,
+                            "failures": [],
+                            "checkpoint_complete": False,
+                        }
+                        write_json_atomic(partial_path, checkpoint)
+                except Exception as exc:
+                    failures.append(
+                        {
+                            "village": village,
+                            "gt_dir": str(gt_dir),
+                            "baseline_dir": str(baseline_dir),
+                            "error": str(exc),
+                        }
+                    )
+
+            video_scores = [item["mean_sgcs"] for item in videos]
+            output = {
+                "sgcs_pipeline_version": SGCS_PIPELINE_VERSION,
+                "baseline": baseline_name,
+                "baseline_root": str(baseline_root),
+                "gt_root": str(args.gt_root),
+                "path_type": path_type,
+                "length": str(length),
+                "stride": args.stride,
+                "tau": args.tau,
+                "confidence_threshold": args.confidence_threshold,
+                "categories": categories,
+                "category_prompts": resolved_category_prompts(categories),
+                "category_merges": resolved_category_merges(categories),
+                "trajectory_index": args.trajectory_index,
+                "all": eval_all,
+                "eval_all_trajectories": eval_all,
+                "num_videos": len(videos),
+                "mean_sgcs": float(np.mean(video_scores)) if video_scores else 0.0,
+                "std_sgcs": float(np.std(video_scores)) if video_scores else 0.0,
+                "videos": videos,
+                "failures": failures,
+            }
+            write_json_atomic(output_path, output)
+            partial_path.unlink(missing_ok=True)
+            print(
+                f"wrote: {output_path} "
+                f"mean={output['mean_sgcs']:.6f} std={output['std_sgcs']:.6f} "
+                f"videos={len(videos)} failures={len(failures)}"
+            )
+
+
 def main() -> None:
     args = parse_args()
     if args.stride <= 0:
         raise ValueError("--stride must be positive")
     if args.tau <= 0:
         raise ValueError("--tau must be positive")
+    if args.trajectory_index < 0:
+        raise ValueError("--trajectory-index must be non-negative")
+    if args.vis_output is not None and (args.video_a is None or args.video_b is None):
+        raise ValueError("--vis-output is only supported in single-pair mode")
 
     categories = list(dict.fromkeys(args.categories))
     processor = build_processor(args)
-    write_single_pair_result(processor, args, categories)
+    if args.video_a is not None or args.video_b is not None:
+        write_single_pair_result(processor, args, categories)
+    else:
+        write_dataset_results(processor, args, categories)
 
 
 if __name__ == "__main__":

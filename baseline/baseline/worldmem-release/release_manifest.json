@@ -1,0 +1,14 @@
+{
+  "repo_id": "zeqixiao/worldmem_checkpoints",
+  "revision": "a3ae4d1c3a89260f800ddeab01ca56b7e63b10e2",
+  "files": {
+    "diffusion_only.ckpt": {
+      "size": 3780882509,
+      "sha256": "b63155939ae584e9819254c90754d3b39c5b3f08297525fa0eae9ae5f8f37f70"
+    },
+    "vae_only.ckpt": {
+      "size": 917053138,
+      "sha256": "82c285609570d0a9a99815f73c1f0f44ba4bbf52460d3f7319bae03a675c947b"
+    }
+  }
+}

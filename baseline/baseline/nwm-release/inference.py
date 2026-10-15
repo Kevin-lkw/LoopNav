@@ -17,12 +17,12 @@ from diffusion import create_diffusion
 from diffusers.models import AutoencoderKL
 
 import misc
-import distributed as dist
 from models import CDiT_models
 from datasets import EvalDataset
 from PIL import Image
 import json
 import cv2
+from pathlib import Path
 from misc import angle_difference, get_data_path, get_delta_np, normalize_data, to_local_coords, transform
 
 
@@ -72,6 +72,17 @@ def get_offset_actions(path):
     assert path.endswith(".json")
     actions = json.load(open(path))
     length = len(actions)
+    return_points = [
+        index for index, action in enumerate(actions)
+        if action.get("return_point") is True
+    ]
+    if return_points:
+        if len(return_points) != 1:
+            raise ValueError(
+                f"Expected one return_point in {path}, found {len(return_points)}"
+            )
+        print(f"using explicit return_point at {return_points[0]}, total length {length}")
+        return return_points[0]
     start_pos ={"x":actions[0]["x"],"z":actions[0]["z"]}
     print(f"start_pos: {start_pos}")
 
@@ -169,13 +180,18 @@ if __name__ == "__main__":
     # Rollout Evaluation Args
     parser.add_argument("--rollout_fps_values", type=str, default='1,4', help="")
     parser.add_argument("--gt", type=int, default=0, help="set to 1 to produce ground truth evaluation set")
+    parser.add_argument("--data_root", type=str, default="../test_data")
+    parser.add_argument("--nvtype", type=str, default="ABA")
+    parser.add_argument("--village_ids", nargs="+", default=["18", "19", "20"])
+    parser.add_argument("--lengths", nargs="+", type=int, default=[5, 15, 30, 50])
+    parser.add_argument("--device", default="cuda")
     args = parser.parse_args()
     
     args.rollout_fps_values = [int(fps) for fps in args.rollout_fps_values.split(',')]
     
     # main(args)
     exp_eval = args.exp
-    device = torch.device("cuda")
+    device = torch.device(args.device)
     with open("config/eval_config.yaml", "r") as f:
         default_config = yaml.safe_load(f)
     config = default_config
@@ -201,13 +217,20 @@ if __name__ == "__main__":
     model_lst = (model, diffusion, vae)
     print("loading finish")
 
-    for nvtype in ["ABA","ABCA"]:
-        for length in [5,15,30,50]:
-            for loc in ["snowy_village_20", "desert_village_20", "plains_village_20", "taiga_village_20", "savanna_village_20", "zombie_village_20"]:
+    for nvtype in [args.nvtype]:
+        for length in args.lengths:
+            dataset_dir = Path(args.data_root) / nvtype / str(length)
+            locations = sorted(
+                p.name for p in dataset_dir.iterdir()
+                if p.is_dir() and p.name.rsplit('_', 1)[-1] in args.village_ids
+            )
+            for loc in locations:
                 print(f"Processing {nvtype} {length} {loc}")
-                path = "../test_data/" + nvtype + "/" + str(length) + "/" + loc
-                output_path = f"./output_32_{args.ckp}/" + nvtype + "/" + str(length) + "/" + loc 
-                file_list = os.listdir(path)
-                file_list.sort()
-                file = os.path.join(path, file_list[0])
-                main(args, file, output_path, model_lst, config, device)
+                path = str(dataset_dir / loc)
+                output_path = str(Path(args.output_dir) / nvtype / str(length) / loc)
+                for video_name in sorted(f for f in os.listdir(path) if f.endswith('.avi')):
+                    output_file = Path(output_path) / f"{Path(video_name).stem}.mp4"
+                    if output_file.exists():
+                        print(f"skipping existing {output_file}")
+                        continue
+                    main(args, os.path.join(path, video_name), output_path, model_lst, config, device)

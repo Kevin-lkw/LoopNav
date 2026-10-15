@@ -1,0 +1,7 @@
+train:
+  id: csgo
+  size: [180, 320]
+num_actions: 24
+path_data_low_res: dataset/low_res # TO DEFINE
+path_data_full_res: data/LoopNav/ABA # TO DEFINE
+keymap: csgo

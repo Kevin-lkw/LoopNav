@@ -1,293 +1,128 @@
-# World Model Baselines and Scene Graph Consistency Score
+# Model setup and evaluation
 
-This repository contains adapted evaluation scripts for Minecraft world model
-baselines and metric scripts for computing Scene Graph Consistency Score (SGCS)
-on our dataset.
+The five `baseline/*-release/` directories are overlays for upstream model repositories. They contain LoopNav-specific files and their dependencies, not standalone model packages. Each upstream retains its own license, environment, and checkpoint requirements.
 
-The currently supported baselines are:
+## Install an overlay
 
-- Open OASIS
-- DIAMOND
-- MineWorld
-- NWM
+Use a separate clone/environment per model. The source revisions used locally are pinned in [release_sources.json](release_sources.json):
 
-The metric code provides:
+| Overlay | Upstream | Revision |
+| --- | --- | --- |
+| `open-oasis-release` | [etched-ai/open-oasis](https://github.com/etched-ai/open-oasis) | `f59deef2c019c212bd0c5a3a5b986a51f3701847` |
+| `mineworld-release` | [microsoft/mineworld](https://github.com/microsoft/mineworld) | `b1b5a385aeef20aed0cc1e0d5f25f74776b17fdc` |
+| `nwm-release` | [facebookresearch/nwm](https://github.com/facebookresearch/nwm) | `16bec8770d73ff9e82531bad36a8229cd1a02554` |
+| `diamond-release` | [eloialonso/diamond](https://github.com/eloialonso/diamond) | `851cefb497733d27f1b85c804104638765860fca` |
+| `worldmem-release` | [Kevin-lkw/worldmem](https://github.com/Kevin-lkw/worldmem) | `ac7f3cb1b5c6065f91547dd5ef8c149045db27ac` |
 
-- `metrics/sgcs_eval.py`: SAM3-based Scene Graph Consistency Score evaluation.
-- `metrics/controlled_perturbation.py`: controlled perturbations on GT videos/labels,
-  with SGCS, SSIM, or sim-LPIPS evaluation.
-
-## Repository Layout
-
-```text
-.
-├── baseline/
-│   ├── open-oasis-release/
-│   │   └── evaluate.py
-│   ├── mineworld-release/
-│   │   └── inference.py
-│   ├── nwm-release/
-│   │   ├── inference.py
-│   │   └── processmc.py
-│   └── diamond-release/
-│       └── src/
-│           ├── data/MCdata.py
-│           └── envs/world_model_env.py
-├── metrics/
-│   ├── sgcs_eval.py
-│   ├── controlled_perturbation.py
-│   └── calcmetric.py
-└── README.md
-```
-
-## Dataset Format
-
-The scripts assume the dataset is organized by path type, rollout length, and
-village:
-
-```text
-baseline/test_data/
-├── ABA/
-│   ├── 5/
-│   │   └── desert_village_20/
-│   │       ├── trajectory_0.avi
-│   │       └── trajectory_0.json
-│   └── ...
-└── ABCA/
-    └── ...
-```
-
-Default SGCS evaluation covers:
-
-- path types: `ABA`, `ABCA`
-- lengths: `5`, `15`, `30`, `50`
-- villages: `desert_village_20`, `plains_village_20`, `savanna_village_20`,
-  `snowy_village_20`, `taiga_village_20`, `zombie_village_20`
-
-Generated baseline videos should follow the same tree structure:
-
-```text
-baseline/<baseline-output-root>/
-└── ABA/
-    └── 5/
-        └── desert_village_20/
-            └── trajectory_0.mp4
-```
-
-## Environment Setup
-
-Install the common Python dependencies used by the metric scripts:
+For example, starting at the LoopNav repository root:
 
 ```bash
-pip install opencv-python pillow numpy tqdm torch torchvision
+export LOOPNAV_REPO="$PWD"
+git clone https://github.com/etched-ai/open-oasis.git ../open-oasis-loopnav
+git -C ../open-oasis-loopnav checkout f59deef2c019c212bd0c5a3a5b986a51f3701847
+cp -a baseline/baseline/open-oasis-release/. ../open-oasis-loopnav/
 ```
 
-For `controlled_perturbation.py --lpips`, also install:
+Repeat with the matching repository, revision, and overlay for each model. Install upstream dependencies and obtain upstream or LoopNav-trained checkpoints before inference. No fine-tuned weights are included in this repository.
+
+Prepare the fixed evaluation inputs with the [benchmark guide](benchmark/README.md#prepare-the-evaluation-subset), then set absolute paths so commands work from upstream directories:
 
 ```bash
-pip install lpips
+export LOOPNAV_INPUTS="$LOOPNAV_REPO/baseline/benchmark/prepared"
+export LOOPNAV_PREDICTIONS="$LOOPNAV_REPO/predictions"
 ```
 
-### Install SAM3
+The following commands run from each model's upstream repository root. Navigation examples use `ABA_FIXED`; repeat with `ABCA`. Both cover ranges 5/15/30/50 and villages 19/20. The prepared tree contains only the five selected trajectories per setting.
 
-Both `metrics/sgcs_eval.py` and `metrics/controlled_perturbation.py` require
-Meta SAM3:
+## Open OASIS
+
+Download `oasis500m.safetensors` and `vit-l-20.safetensors` using the upstream instructions. The overlay includes its action loader and VAE changes, including chunked decoding for long trajectories.
 
 ```bash
-git clone https://github.com/facebookresearch/sam3.git metrics/sam3
-cd metrics/sam3
-pip install -e .
-```
-
-Alternatively, install SAM3 somewhere else and make sure `sam3` is importable in
-the active Python environment. If `--checkpoint` is not provided, SAM3 will use
-its default checkpoint loading behavior.
-
-## Baseline Evaluation
-
-Each baseline has its own upstream environment and checkpoint requirements.
-Before running a baseline, install the corresponding original repository and
-dependencies, then use the adapted files in `baseline/` to run on this dataset.
-
-### Open OASIS
-
-Adapted entry:
-
-```text
-baseline/open-oasis-release/evaluate.py
-```
-
-Example:
-
-```bash
-cd baseline/open-oasis-release
 python evaluate.py \
-  --output-path output \
-  --n-prompt-frames 32 \
-  --fps 10 \
-  --ddim-steps 10
+  --data-root "$LOOPNAV_INPUTS/gt" --nvtype ABA_FIXED \
+  --village-ids 19 20 --n-prompt-frames 32 --ddim-steps 10 \
+  --oasis-ckpt oasis500m.safetensors --vae-ckpt vit-l-20.safetensors \
+  --output-path "$LOOPNAV_PREDICTIONS/oasis"
+
+python evaluate_turn.py \
+  --data-root "$LOOPNAV_INPUTS/turn_gt" --village-ids 19,20 \
+  --context-frames 32 --ddim-steps 10 \
+  --output-root "$LOOPNAV_PREDICTIONS/oasis"
 ```
 
-The script iterates over `ABA`/`ABCA`, lengths `5,15,30,50`, and the default six
-villages. Update the dataset path inside the script if your local data root is
-different.
+## MineWorld
 
-### MineWorld
-
-Adapted entry:
-
-```text
-baseline/mineworld-release/inference.py
-```
-
-Example:
-
-```bash
-cd baseline/mineworld-release
-python inference.py \
-    --data_root "/path/to/validation/dataset" \
-    --model_ckpt "path/to/ckpt" \
-    --config "path/to/config" \
-    --demo_num 1 \
-    --frames 31 \
-    --accelerate-algo 'naive' \
-    --top_p 0.8 \
-    --output_dir "path/to/output"
-```
-
-Optional arguments:
-
-- `--nvtype ABA` or `--nvtype ABCA` to evaluate path type.
-- `--index <idx>` to evaluate a specific trajectory pair.
-
-### NWM
-
-Adapted entries:
-
-```text
-baseline/nwm-release/processmc.py
-baseline/nwm-release/inference.py
-```
-
-First preprocess videos into the frame layout expected by NWM:
-
-```bash
-cd baseline/nwm-release
-python processmc.py
-```
-Train the model and obtain the corresponding ckpt, then
-
-```bash
-torchrun train.py --config config/nwm_cdit_b.yaml --ckpt-every 10000 --eval-every 10000 --bfloat16 1 --epochs 600 --torch-compile 0 --use-wandb 
-```
-
-Then run inference:
+Use the 1.2B, 32-frame checkpoint and corresponding configuration. Set `--model_ckpt` to the checkpoint **file**. The navigation entry requires `--frames` and `--config`.
 
 ```bash
 python inference.py \
-  --output_dir output \
-  --exp config/nwm_cdit_b.yaml \
-  --ckp ckpt_path \
-  --num_sec_eval 5 \
-  --input_fps 4 \
-  --datasets mc \
-  --eval_type rollout
+  --config configs/1200M_32f.yaml --model_ckpt /path/to/mineworld.ckpt \
+  --frames 32 --top_p 0.8 \
+  --data_root "$LOOPNAV_INPUTS/gt" --nvtype ABA_FIXED --village_ids 19 20 \
+  --output_dir "$LOOPNAV_PREDICTIONS/mineworld"
+
+python evaluate_turn.py \
+  --config configs/1200M_32f.yaml --checkpoint /path/to/mineworld.ckpt \
+  --data-root "$LOOPNAV_INPUTS/turn_gt" --village-ids 19,20 \
+  --output-root "$LOOPNAV_PREDICTIONS/mineworld"
 ```
 
-Check `processmc.py` and `inference.py` for local paths, checkpoint locations,
-and GPU device settings before running.
+## NWM
 
-### DIAMOND
+After installing the upstream environment, run `python -m pip install -r requirements-loopnav.txt` for the metric dependencies imported by the training utilities.
 
-Adapted files:
-
-```text
-baseline/diamond-release/src/data/MCdata.py
-baseline/diamond-release/src/envs/world_model_env.py
-```
-
-Use these files inside the DIAMOND codebase to load our Minecraft dataset and
-run DIAMOND evaluation with its original training/evaluation scripts. Place the
-generated videos under a tree matching the dataset layout so SGCS can compare
-them against GT videos.
-
-## Scene Graph Consistency Score
-`metrics/sgcs_eval.py` computes SGCS using SAM3 for object segmentation and matching.
-### Single Pair
+The adapted configuration uses 32 context frames. Navigation inference locates the checkpoint using `results_dir`, `run_name`, and `--ckp`: by default `logs/nwm_cdit_b_32/checkpoints/0200000.pth.tar`. TURN accepts a checkpoint path directly.
 
 ```bash
-python metrics/sgcs_eval.py \
-  --video_a path/to/video_a.mp4 \
-  --video_b path/to/video_b.mp4 \
+python inference.py --exp config/nwm_cdit_b.yaml --ckp 0200000 \
+  --data_root "$LOOPNAV_INPUTS/gt" --nvtype ABA_FIXED --village_ids 19 20 \
+  --output_dir "$LOOPNAV_PREDICTIONS/nwm"
+
+python evaluate_turn.py --checkpoint /path/to/0200000.pth.tar \
+  --data-root "$LOOPNAV_INPUTS/turn_gt" --village-ids 19,20 \
+  --output-root "$LOOPNAV_PREDICTIONS/nwm"
 ```
 
-Important options:
+For training, `processmc.py --data-root /path/to/LoopNav --output-root data/LoopNav_img --tasks ABA ABCA` extracts JPEG frames and `traj_data.pkl` annotations expected by the upstream loader. Set `datasets.mc.data_folder` in `config/nwm_cdit_b.yaml` to the chosen processed task. The loader uses villages 1–16 for training and 17–18 for validation; keep villages 19–20 for benchmark evaluation. Use the adapted `train.py` with the upstream distributed-training setup.
 
-- `--stride`: frame sampling interval. Default: `5`.
-- `--tau`: normalized centroid distance threshold for object matching. Default:
-  `0.1`.
-- `--confidence-threshold`: SAM3 mask threshold. Default: `0.5`.
-- `--categories`: text prompts used for segmentation. Defaults to Minecraft
-  scene categories such as `building`, `tree`, `grass`, `path`, `sky`.
-- `--checkpoint`: optional local SAM3 checkpoint path.
-- `--device`: `cuda` or `cpu`.
+## DIAMOND
 
-The output JSON contains per-video scores, per-frame scores, failed cases, and
-the aggregate `mean_sgcs`/`std_sgcs`.
-
-## Controlled Perturbation
-
-`metrics/controlled_perturbation.py` generates synthetic perturbations from GT
-videos and evaluates how each metric responds.
-
-Supported perturbations:
-
-- `small_translation`
-- `small_rotation`
-- `crop_resize`
-- `color_change`
-- `delete_object`
-- `swap_objects`
-
-Run SGCS perturbation evaluation on one video:
+The overlay includes training/data changes, the world-model environment, and both inference entrypoints. Use a trained run directory containing `checkpoints/agent_versions/agent_epoch_00200.pt`.
 
 ```bash
-python metrics/controlled_perturbation.py \
-  --video_a baseline/test_data/ABA/5/desert_village_20/trajectory_0.avi \
-  --perturbations all \
-  --stride 5 \
-  --output perturb_sgcs.json \
-  --vis-output perturb_sgcs.jpg
+cd src
+python inference.py --checkpoint_dir /path/to/diamond-run --ckpt 00200 \
+  --data_root "$LOOPNAV_INPUTS/gt" --nvtype ABA_FIXED --village_ids 19 20 \
+  --output_dir "$LOOPNAV_PREDICTIONS/diamond"
+cd ..
+
+python src/evaluate_turn.py --run-dir /path/to/diamond-run --epoch 00200 \
+  --data-root "$LOOPNAV_INPUTS/turn_gt" --village-ids 19,20 \
+  --output-root "$LOOPNAV_PREDICTIONS/diamond"
 ```
 
-Run batch mode over one directory containing village subdirectories:
+DIAMOND saves both navigation and TURN outputs below `<output>/00200/`. Point SGCS at that epoch directory, or its `TURN` child for TURN evaluation. Configure data paths in `config/env/csgo.yaml` before using the upstream training entrypoint.
+
+## WorldMem
+
+See the dedicated [WorldMem guide](baseline/worldmem-release/README.md) for pinned official checkpoints, LoRA training, the 20,000-step adapter configuration, native 10 FPS inference, and manifest-based SGCS evaluation.
+
+## SGCS
+
+Use the [benchmark guide](benchmark/README.md#evaluate-generated-videos) for exact sample selection, alignment, and model-specific frame cadence. Use a separate SAM 3 environment from the model-generation environments.
+
+## Controlled perturbations
+
+From the LoopNav repository root, in the SAM 3 environment:
 
 ```bash
-python metrics/controlled_perturbation.py \
-  --video-root baseline/test_data/ABA/5 \
-  --perturbations all \
-  --output perturb_batch_sgcs.json
+python baseline/metrics/controlled_perturbation.py \
+  --video_a /path/to/ground_truth.avi --perturbations all --stride 5 \
+  --output results/perturbation_sgcs.json \
+  --vis-output results/perturbation_sgcs.jpg
 ```
 
-Compare against SSIM:
+Add `--ssim` or `--lpips` to compare pixel/perceptual metrics; install `lpips` for the latter. Object deletion and swapping still require SAM 3 for object masks. Run `--help` for perturbation strengths and options.
 
-```bash
-python metrics/controlled_perturbation.py \
-  --video_a baseline/test_data/ABA/5/desert_village_20/trajectory_0.avi \
-  --perturbations all \
-  --ssim \
-  --output perturb_ssim.json
-```
-
-Compare against sim-LPIPS:
-
-```bash
-python metrics/controlled_perturbation.py \
-  --video_a baseline/test_data/ABA/5/desert_village_20/trajectory_0.avi \
-  --perturbations all \
-  --lpips \
-  --output perturb_lpips.json
-```
-
-Object-aware perturbations (`delete_object`, `swap_objects`) still require SAM3
-even when evaluating SSIM or sim-LPIPS.
+`metrics/calcmetric.py` is the legacy SSIM/LPIPS/FVD utility. It requires the external `common_metrics_on_video_quality` package and local path configuration; it is separate from the released SGCS benchmark.

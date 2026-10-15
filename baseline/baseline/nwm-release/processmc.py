@@ -1,4 +1,6 @@
 import os
+import argparse
+from pathlib import Path
 import cv2
 import json
 import pickle
@@ -14,7 +16,7 @@ def extract_frames(video_path, output_dir):
         ret, frame = cap.read()
         if not ret:
             break
-        img_path = os.path.join(output_dir, f"{frame_id:05d}.jpg")
+        img_path = os.path.join(output_dir, f"{frame_id}.jpg")
         cv2.imwrite(img_path, frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
         # compare the size of the two files
         # print(os.path.getsize(img_path), os.path.getsize(png_path))
@@ -63,31 +65,24 @@ def process_dataset(input_dir, output_dir):
         if len(traj_data["position"]) != num_frames:
             print(f"[Warning] Frame count mismatch for {base_name}: {num_frames} frames vs {len(traj_data['position'])} positions")
 
-        # # Step 3: Save traj_data.pkl
-        # traj_pkl_path = os.path.join(out_path, "traj_data.pkl")
-        # with open(traj_pkl_path, "wb") as f:
-        #     pickle.dump(traj_data, f)
+        # NWM datasets.py reads positions and yaw from this file.
+        with open(os.path.join(out_path, "traj_data.pkl"), "wb") as f:
+            pickle.dump(traj_data, f)
         # cp json file to out_path
         shutil.copy(json_path, os.path.join(out_path, json_file))
 
     print(f"✅ {input_dir} Dataset processing complete.")
 
 if __name__ == "__main__":
-    location_list = [
-        "plains_village",
-        "desert_village",
-        "snowy_village",
-        "taiga_village",
-        "savanna_village",
-        "zombie_village",
-    ]
-    all_location = []
-    for i in range(len(location_list)):
-        for j in range(1,21):
-            all_location.append(f"{location_list[i]}_{j}")
-    for nvtype in ["ABA", "ABCA"]:
-        for nvrange in [5,15,30,50]:
-            for location in all_location:
-                input_dir = f"./data/{nvtype}/{location}/{nvrange}"      # <-- 修改为你的原始数据路径
-                output_dir = f"./data_img/{nvtype}/{location}/{nvrange}"   # <-- 修改为输出路径
-                process_dataset(input_dir, output_dir)
+    parser = argparse.ArgumentParser(description="Extract NWM JPEG frames and trajectory metadata.")
+    parser.add_argument("--data-root", type=Path, required=True)
+    parser.add_argument("--output-root", type=Path, required=True)
+    parser.add_argument("--tasks", nargs="+", default=["ABA", "ABCA"])
+    args = parser.parse_args()
+    for task in args.tasks:
+        task_root = args.data_root / task
+        if not task_root.is_dir():
+            raise FileNotFoundError(task_root)
+        for location in sorted(p for p in task_root.iterdir() if p.is_dir()):
+            for length in sorted(p for p in location.iterdir() if p.is_dir()):
+                process_dataset(str(length), str(args.output_root / task / location.name / length.name))

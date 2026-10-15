@@ -1,0 +1,50 @@
+run:
+  name: p1_rank8_official_to_loopnav
+  seed: 20260725
+  max_steps: 20000
+  checkpoint_every: 500
+  full_checkpoint_every: 2500
+  log_every: 20
+
+official:
+  release_dir: checkpoints/official_worldmem
+  config: configurations/worldmem_official_eval.yaml
+  repo_id: zeqixiao/worldmem_checkpoints
+  revision: a3ae4d1c3a89260f800ddeab01ca56b7e63b10e2
+
+data:
+  root: data/LoopNav
+  tasks: [TURN, ABA_FIXED, ABCA]
+  train_village_ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+  held_out_village_ids: [17, 18, 19, 20]
+  source_stride: 2
+  frame_height: 360
+  frame_width: 640
+  local_frames: 8
+  memory_frames: 8
+  return_focused_probability: 0.7
+  memory_retrieval_dropout: 0.1
+  virtual_epoch_size: 300000
+  camera_clip: 1.0
+
+adapter:
+  rank: 8
+  alpha: 8.0
+  dropout: 0.0
+  branches: [spatial, temporal, memory]
+  tune_external_cond: true
+  tune_pose_modules: true
+
+optimizer:
+  lora_and_action_lr: 2.0e-5
+  pose_lr: 2.0e-5
+  weight_decay: 2.0e-3
+  betas: [0.9, 0.99]
+  warmup_steps: 1000
+
+trainer:
+  precision: 16-mixed
+  per_device_batch_size: 2
+  accumulate_grad_batches: 1
+  num_workers: 2
+  gradient_clip_val: 1.0

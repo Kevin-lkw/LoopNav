@@ -53,7 +53,7 @@ def token2video(code_list, tokenizer, save_path, fps, device = 'cuda'):
 def get_args():
     parser = ArgumentParser()
     parser.add_argument('--data_root', type=str, default="../test_data")
-    parser.add_argument('--model_ckpt', type=str, default="./mineworld/checkpoints")
+    parser.add_argument('--model_ckpt', type=str, default="checkpoints")
     parser.add_argument('--config', type=str, required=True)
     parser.add_argument('--output_dir', type=str, default="./output")
     parser.add_argument('--demo_num', type=int, default=1)
@@ -66,6 +66,8 @@ def get_args():
     group.add_argument('--top_p', type=float, help='Use top-p (nucleus) sampling')
     parser.add_argument('--nvtype', type=str, default=None)
     parser.add_argument('--index', type=int, default=None)
+    parser.add_argument('--village_ids', nargs='+', default=['18', '19', '20'])
+    parser.add_argument('--lengths', nargs='+', type=int, default=[5, 15, 30, 50])
     args = parser.parse_args()
     return args
 
@@ -73,6 +75,17 @@ def get_offset_actions(path):
     assert path.endswith(".json")
     actions = json.load(open(path))
     length = len(actions)
+    return_points = [
+        index for index, action in enumerate(actions)
+        if action.get("return_point") is True
+    ]
+    if return_points:
+        if len(return_points) != 1:
+            raise ValueError(
+                f"Expected one return_point in {path}, found {len(return_points)}"
+            )
+        print(f"using explicit return_point at {return_points[0]}, total length {length}")
+        return return_points[0]
     start_pos ={"x":actions[0]["x"],"z":actions[0]["z"]}
     print(f"start_pos: {start_pos}")
 
@@ -227,16 +240,20 @@ if __name__ == '__main__':
     if args.nvtype is not None:
         nvtype_list = [args.nvtype]
     for nvtype in nvtype_list:
-        for length in [5,15,30,50]:
-            for loc in ["snowy_village_20", "desert_village_20", "plains_village_20", "taiga_village_20", "savanna_village_20", "zombie_village_20"]:
+        for length in args.lengths:
+            dataset_dir = Path(args.data_root) / nvtype / str(length)
+            locations = sorted(
+                p.name for p in dataset_dir.iterdir()
+                if p.is_dir() and p.name.rsplit('_', 1)[-1] in args.village_ids
+            )
+            for loc in locations:
                 print(f"Processing {nvtype} {length} {loc}")
-                path = "../test_data/" + nvtype + "/" + str(length) + "/" + loc
-                output_path = f"./output_32/" + nvtype + "/" + str(length) + "/" + loc 
-                file_list = os.listdir(path)
-                file_list.sort()
+                path = str(dataset_dir / loc)
+                output_path = str(Path(args.output_dir) / nvtype / str(length) / loc)
+                file_list = sorted(f for f in os.listdir(path) if f.endswith('.avi'))
                 if args.index is not None:
-                    file_list = [file_list[args.index],file_list[args.index+1]]
+                    file_list = [file_list[args.index]]
                 
-                for i in range(0,len(file_list),2):
-                    file = os.path.join(path, file_list[i])
+                for video_name in file_list:
+                    file = os.path.join(path, video_name)
                     return_item = lvm_generate(args, model, input_path=path, output_path=output_path, file=file)

@@ -23,19 +23,11 @@ import torch
 from PIL import Image, ImageDraw, ImageFont
 from tqdm import tqdm
 
+import sgcs_eval
 
-DEFAULT_CATEGORIES = [
-    "building",
-    "tree",
-    "flower",
-    "grass",
-    "path",
-    "water",
-    "sky",
-    "sand",
-    "dirt",
-    "snow",
-]
+
+DEFAULT_CATEGORIES = sgcs_eval.DEFAULT_CATEGORIES
+DEFAULT_CATEGORY_PROMPTS = sgcs_eval.DEFAULT_CATEGORY_PROMPTS
 
 
 def ensure_local_sam3_importable() -> None:
@@ -49,8 +41,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Compute SAM3 SGCS ablations on one video with synthetic perturbations."
     )
-    parser.add_argument("--video_a", type=Path)
-    parser.add_argument("--video_b", type=Path)
+    parser.add_argument("--video_a", type=Path, default="baseline/test_data/ABA/5/savanna_village_20/05-10_15-41-50.avi")
+    parser.add_argument("--video_b", type=Path, default="baseline/mineworld/output_32/ABA/5/savanna_village_20/05-10_15-41-50.mp4")
     parser.add_argument(
         "--video-root",
         type=Path,
@@ -77,7 +69,11 @@ def parse_args() -> argparse.Namespace:
         "--categories",
         nargs="+",
         default=DEFAULT_CATEGORIES,
-        help="Text prompts/categories to evaluate",
+        help=(
+            "Semantic categories to evaluate. The default prompt mapping uses "
+            "'house' for building; path is merged into dirt and is not run as "
+            "a separate prompt."
+        ),
     )
     parser.add_argument(
         "--checkpoint",
@@ -389,7 +385,8 @@ def collect_sam_object_masks(
     max_area = height * width * max_area_frac
     objects = []
     for category in categories:
-        for mask in segment_with_prompt(processor, state, category):
+        prompt = DEFAULT_CATEGORY_PROMPTS.get(category, category)
+        for mask in segment_with_prompt(processor, state, prompt):
             area = int(mask.sum())
             if area < min_area or area > max_area:
                 continue
@@ -707,8 +704,9 @@ def compute_sgcs_from_states(
     weighted_sum = 0.0
     total_weight = 0.0
     for category in categories:
-        masks_a = segment_with_prompt(processor, state_a, category)
-        masks_b = segment_with_prompt(processor, state_b, category)
+        prompt = DEFAULT_CATEGORY_PROMPTS.get(category, category)
+        masks_a = segment_with_prompt(processor, state_a, prompt)
+        masks_b = segment_with_prompt(processor, state_b, prompt)
         result = score_category(masks_a, masks_b, height, width, tau)
         category_results[category] = result
         weighted_sum += result["weight"] * result["score"]
@@ -1146,6 +1144,7 @@ def evaluate_video(
     ) = summarize_video_results(results, perturbations, metric_name)
     mean_key = f"mean_{metric_name}_by_perturbation"
     output = {
+        "sgcs_pipeline_version": sgcs_eval.SGCS_PIPELINE_VERSION,
         "video_a": str(video_path),
         "video_b": str(video_path),
         "metric": metric_name,
@@ -1153,6 +1152,8 @@ def evaluate_video(
         "tau": args.tau,
         "confidence_threshold": args.confidence_threshold,
         "categories": categories,
+        "category_prompts": sgcs_eval.resolved_category_prompts(categories),
+        "category_merges": sgcs_eval.resolved_category_merges(categories),
         "selected_perturbations": [item["name"] for item in perturbations],
         "perturbations": {
             item["name"]: {
@@ -1309,12 +1310,15 @@ def main() -> None:
 
     batch_summary = summarize_batch(video_outputs, perturbations)
     output = {
+        "sgcs_pipeline_version": sgcs_eval.SGCS_PIPELINE_VERSION,
         "video_root": str(args.video_root),
         "metric": metric_name,
         "stride": args.stride,
         "tau": args.tau,
         "confidence_threshold": args.confidence_threshold,
         "categories": categories,
+        "category_prompts": sgcs_eval.resolved_category_prompts(categories),
+        "category_merges": sgcs_eval.resolved_category_merges(categories),
         "selected_perturbations": [item["name"] for item in perturbations],
         "num_villages": len(video_outputs),
         "batch_summary": batch_summary,

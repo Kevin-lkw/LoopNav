@@ -25,9 +25,9 @@ bot.once('spawn', () => {
   setTimeout(() => {
     
     const fs = require('fs')
-    const path = `/nfs-shared-2/liankewei-mus2/data/${nvtype}/${location}/5`
-    const path2 = `/nfs-shared-2/liankewei-mus2/data/${nvtype}/${location}/15`
-    const path3 = `/nfs-shared-2/liankewei-mus2/data/${nvtype}/${location}/30`
+    const path = `data/LoopNav/${nvtype}/${location}/5`
+    const path2 = `data/LoopNav/${nvtype}/${location}/15`
+    const path3 = `data/LoopNav/${nvtype}/${location}/30`
 
 
     const linePath1 = []

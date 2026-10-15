@@ -209,4 +209,4 @@ class MinecraftDataset(Dataset):
 
 
 if __name__ == "__main__":
-    dataset = MinecraftDataset(Path("./data/ABA"))
+    dataset = MinecraftDataset(Path("data/LoopNav/ABA"))

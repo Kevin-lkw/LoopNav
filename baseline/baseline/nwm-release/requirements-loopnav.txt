@@ -1,0 +1,4 @@
+# Additional metrics dependencies used by upstream distributed.py during training.
+# Install after the upstream model environment.
+torcheval==0.0.7
+torch-fidelity==0.3.0
