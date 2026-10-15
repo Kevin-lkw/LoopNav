@@ -1,6 +1,8 @@
 # LoopNav
-This is the offical repo for [LoopNav](https://arxiv.org/abs/2505.22976).
-[Dataset](https://huggingface.co/datasets/kevinLian/LoopNav)
+
+This is the official repository for **LoopNav: Benchmarking Spatial Consistency in World Models**.
+
+[Website](https://kevin-lkw.github.io/LoopNav/) | [Paper](https://arxiv.org/abs/2505.22976) | [Dataset](https://huggingface.co/datasets/kevinLian/LoopNav)
 
 For baselines and evaluation, see baseline folder.
 
