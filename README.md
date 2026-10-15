@@ -4,6 +4,8 @@
 
 [Kewei Lian](https://kevin-lkw.github.io/) · [Shaofei Cai](https://phython96.github.io/) · [Yitao Liang](https://zero-lab-pku.github.io/personwise/liangyitao/) · [Anji Liu](https://liuanji.github.io/)
 
+**NeurIPS 2026 — Evaluations & Datasets Track**
+
 **[Project Website](https://kevin-lkw.github.io/LoopNav/)** · **[Paper](https://arxiv.org/abs/2505.22976)** · **[Dataset](https://huggingface.co/datasets/kevinLian/LoopNav)** · **[Citation](#citation)**
 
 LoopNav is a dataset and benchmark for evaluating whether world models preserve spatial consistency when an agent revisits a previously observed location. It combines loop-based navigation in Minecraft with action annotations and a **Scene Graph Consistency Score (SGCS)** for comparing scene structure across observations.
