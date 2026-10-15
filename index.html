@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="LoopNav: a 250-hour loop-based navigation dataset and benchmark for spatial consistency in world models, with the Scene Graph Consistency Score (SGCS).">
+  <meta property="og:title" content="LoopNav: Benchmarking Spatial Consistency in World Models">
+  <meta property="og:description" content="Explore. Return. Remember. Evaluating whether world models reconstruct places they have seen before.">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://kevin-lkw.github.io/LoopNav/">
+  <meta property="og:url" content="https://kevin-lkw.github.io/LoopNav/">
+  <meta property="og:image" content="https://kevin-lkw.github.io/LoopNav/assets/loop-overview.webp">
+  <title>LoopNav — Benchmarking Spatial Consistency in World Models</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/inter-variable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <aside class="contents" aria-label="Table of contents">
+    <a class="contents-brand" href="#top"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.5 7.5A8 8 0 1 0 20 14M18.5 3v5h-5"/></svg>LoopNav</a>
+    <p>CONTENTS</p>
+    <nav>
+      <a href="#abstract" data-section-link>Abstract</a>
+      <a href="#dataset" data-section-link>Dataset</a>
+      <a href="#explore" data-section-link>Trajectory explorer</a>
+      <a href="#benchmark" data-section-link>Benchmark</a>
+      <a href="#metric" data-section-link>SGCS metric</a>
+      <a href="#results" data-section-link>Evaluation</a>
+      <a href="#citation" data-section-link>BibTeX</a>
+    </nav>
+    <a class="contents-bottom" href="https://github.com/Kevin-lkw/LoopNav" target="_blank" rel="noopener noreferrer">View on GitHub ↗</a>
+  </aside>
+  <main id="main">
+    <header class="publication-header" id="top">
+      <p class="eyebrow">A DATASET & BENCHMARK FOR WORLD MODELS</p>
+      <h1><span class="project-name">LoopNav:</span> Benchmarking Spatial<br class="title-break"> Consistency in World Models</h1>
+      <div class="publication-authors" aria-label="Authors">
+        <span><a href="https://kevin-lkw.github.io/" target="_blank" rel="noopener noreferrer">Kewei Lian</a><sup>1</sup></span>
+        <span><a href="https://phython96.github.io/" target="_blank" rel="noopener noreferrer">Shaofei Cai</a><sup>2</sup></span>
+        <span><a href="https://zero-lab-pku.github.io/personwise/liangyitao/" target="_blank" rel="noopener noreferrer">Yitao Liang</a><sup>2</sup></span>
+        <span><a href="https://liuanji.github.io/" target="_blank" rel="noopener noreferrer">Anji Liu</a><sup>1</sup></span>
+      </div>
+      <p class="publication-affiliation"><span><sup>1</sup>National University of Singapore</span><span><sup>2</sup>Peking University</span></p>
+      <div class="publication-links">
+        <a class="publication-button" href="https://arxiv.org/abs/2505.22976" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6M9 16h6"/></svg>Paper</a>
+        <a class="publication-button" href="https://github.com/Kevin-lkw/LoopNav" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/></svg>Code</a>
+        <a class="publication-button" href="https://huggingface.co/datasets/kevinLian/LoopNav" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/></svg>Dataset</a>
+      </div>
+      <p class="tldr"><strong>TL;DR:</strong> Can a world model remember a place when it returns?<br class="desktop-break"> LoopNav tests <strong>long-horizon spatial consistency</strong> through loop-based navigation in Minecraft.</p>
+      <nav class="page-nav" aria-label="Page sections"><a href="#abstract">Abstract</a><a href="#dataset">Dataset</a><a href="#explore">Explorer</a><a href="#metric">SGCS</a><a href="#results">Evaluation</a><a href="#citation">BibTeX</a></nav>
+    </header>
+
+    <figure class="hero-figure">
+      <button class="figure-zoom hero-zoom" type="button" data-zoom="assets/loop-overview.webp" aria-label="Enlarge Figure 1: loop-style trajectories"><img src="assets/loop-overview.webp" width="1600" height="876" alt="Bird’s-eye view of a Minecraft village showing loop trajectories, landmark observations, and the exploration and reconstruction phases."><span class="zoom-label">Enlarge figure ↗</span></button>
+      <figcaption><strong>Explore a world. Return to a familiar place.</strong> Does the world still look the same?</figcaption>
+    </figure>
+    <div class="dataset-stats" aria-label="Dataset at a glance">
+      <div><strong>250<span> hours</span></strong><span>of navigation video</span></div>
+      <div><strong>19.2<span> million</span></strong><span>frames with actions</span></div>
+      <div><strong>3<span> loop types</span></strong><span>TURN · ABA · ABCA</span></div>
+      <div><strong>4<span> ranges</span></strong><span>5 · 15 · 30 · 50 blocks</span></div>
+    </div>
+
+    <section class="paper-section abstract-section" id="abstract">
+      <h2>Abstract</h2>
+      <div class="prose">
+        <p>The ability to simulate the world in a spatially consistent manner is a crucial requirement for effective world models. Beyond high-quality visual generation, a world model must retain long-horizon observations and maintain spatial representations that support reliable simulation and planning. Existing datasets rarely enforce spatial consistency, while most benchmarks emphasize visual coherence or generation quality.</p>
+        <p>We introduce <strong>LoopNav</strong>, a dataset and benchmark centered on loop-based navigation. The dataset comprises <strong>250 hours of navigation videos with actions</strong>, collected from diverse locations in Minecraft. Its loop trajectories revisit previously observed places, creating an explicit test of spatial memory. We further introduce the <strong>Scene Graph Consistency Score (SGCS)</strong>, which measures object-level spatial consistency while tolerating small pixel-level variations. The dataset, collection framework, and evaluation code support research on world models that remember the worlds they generate.</p>
+      </div>
+    </section>
+
+    <section class="paper-section" id="dataset">
+      <h2>A Dataset Built Around Returning</h2>
+      <p class="section-intro">Plausible new scenes are not enough. A revisited location should preserve the structures seen before.</p>
+      <div class="prose"><p>LoopNav makes revisitation a core part of every trajectory. Collected in Minecraft, its observations and actions connect visually distinctive landmarks over both short and long horizons. Three principles guide the data collection:</p></div>
+      <div class="principles">
+        <div><span class="step-number">01</span><h3>Distinctive places</h3><p>Houses, farms, and paths provide recognizable landmarks, making changes in scene structure meaningful.</p></div>
+        <div><span class="step-number">02</span><h3>Closed loops</h3><p>TURN, ABA, and ABCA trajectories revisit earlier views or locations, explicitly testing spatial memory.</p></div>
+        <div><span class="step-number">03</span><h3>Progressive difficulty</h3><p>Navigation ranges of 5, 15, 30, and 50 blocks extend the distance and time between observations.</p></div>
+      </div>
+      <figure class="paper-figure"><button class="figure-zoom" type="button" data-zoom="assets/dataset-frames.webp" aria-label="Enlarge Figure 2: dataset samples"><img src="assets/dataset-frames.webp" width="1584" height="492" loading="lazy" alt="Ten sampled observations for each of TURN, ABA, and ABCA, with turning points marked above the frame sequences."><span class="zoom-label">Enlarge figure ↗</span></button><figcaption><strong>Figure 2.</strong> Real dataset samples. Time progresses from left to right; orange labels mark turning points.</figcaption></figure>
+      <details class="detail-block"><summary>Environment and data collection <span aria-hidden="true">+</span></summary><div class="details-body"><p>Data collection uses a customized Mineflayer pipeline with A* navigation. For ABA trajectories, the agent first makes a 360° observation sweep, navigates from A to B, and returns along the forward waypoints in reverse. Twenty trajectories are collected for each combination of location and exploration radius.</p><p>The dataset includes villages, biomes, and structures. The paper’s baseline experiments focus on village environments. The environments use static structures and exclude moving mobs.</p><figure><img src="assets/environments.webp" width="1584" height="892" loading="lazy" alt="Examples of Minecraft villages, biomes, structures, dataset composition, bird’s-eye navigation, and the action space."><figcaption>Figure 6 from the paper: environments and collection setup.</figcaption></figure></div></details>
+    </section>
+
+    <section class="paper-section" id="explore">
+      <p class="eyebrow section-eyebrow">REAL DATA / INTERACTIVE</p>
+      <h2>Explore the Loops</h2>
+      <p class="section-intro">Follow three real navigation trajectories. Watch the landmarks disappear and come back into view.</p>
+      <div class="trajectory-explorer">
+        <div class="explorer-toolbar"><div class="segmented" role="group" aria-label="Trajectory type"><button type="button" data-task="turn" aria-pressed="false">TURN</button><button type="button" data-task="aba" aria-pressed="true">A → B → A</button><button type="button" data-task="abca" aria-pressed="false">A → B → C → A</button></div><span class="sample-location">Plains village · real recording</span></div>
+        <div class="explorer-body">
+          <div class="sample-video-wrap"><video id="trajectory-video" controls muted playsinline preload="metadata" poster="assets/aba-poster.webp" aria-label="ABA navigation recording at original speed"><source src="assets/aba.mp4" type="video/mp4"><source src="assets/aba.webm" type="video/webm">Your browser does not support video playback. <a href="assets/aba.mp4">Download the ABA video.</a></video><div class="video-badges" aria-hidden="true"><span id="phase-badge">Exploration</span><span id="speed-badge">Original speed</span></div></div>
+          <div class="trajectory-info"><span class="eyebrow">THE TRAJECTORY</span><h3 id="trajectory-title">Leave, then retrace.</h3><p id="trajectory-description">Travel from A to B, then return along the forward waypoints in reverse. The return tests whether the model can reconstruct previously observed places.</p><svg id="trajectory-map" viewBox="0 0 320 180" role="img" aria-label="Schematic of the ABA exploration and return path"></svg><div class="path-legend"><span><i class="exploration-dot"></i>Exploration</span><span><i class="return-dot"></i>Return</span></div><p class="schematic-note">Path schematic · not measured coordinates</p><dl class="sample-facts"><div><dt>Navigation range</dt><dd id="sample-range">5 blocks</dd></div><div><dt>Source frames</dt><dd id="sample-frames">46–181</dd></div></dl></div>
+        </div>
+        <div class="phase-timeline" aria-hidden="true"><div id="exploration-segment"><span>Exploration</span></div><div id="return-segment"><span>Return / evaluated</span></div><i id="timeline-cursor"></i></div>
+        <div class="explorer-caption"><p id="sample-caption">ABA · A → B → A · 5-block range. Displayed interval: frames 46–181; return starts at frame 113.</p><button type="button" id="jump-return">Jump to return <span aria-hidden="true">→</span></button></div>
+      </div>
+      <p class="figure-note">Recorded ground-truth observations from the dataset, not model-generated videos. TURN and ABA play at original speed; ABCA plays at 3× speed. The video controls allow pausing and seeking.</p>
+    </section>
+
+    <section class="paper-section" id="benchmark">
+      <h2>Explore First. Evaluate the Return.</h2>
+      <p class="section-intro">Separate seeing a place from reconstructing it.</p>
+      <div class="protocol-diagram" aria-label="ABA evaluation: provide A to B as exploration context, then evaluate generated B to A observations"><div><span class="protocol-label">01 / EXPLORATION</span><strong>A <span>→</span> B</strong><p>Observe the environment<br>and build spatial context.</p></div><span class="protocol-arrow" aria-hidden="true">→</span><div><span class="protocol-label">02 / RECONSTRUCTION</span><strong>B <span>→</span> A</strong><p>Generate the return journey.<br><b>Evaluate this segment only.</b></p></div></div>
+      <div class="prose"><p>For an <strong>ABA</strong> trajectory, the outward journey A → B supplies exploration context; B → A tests reconstruction. For <strong>ABCA</strong>, evaluation covers the final C → A segment. This protocol asks whether a model can reconstruct known spatial structure when it revisits a location.</p><p>Pixel-based comparisons alone can confuse small viewpoint drift with a different world. A useful consistency measure should tolerate minor misalignment while detecting missing objects, replacements, and changes in layout.</p></div>
+    </section>
+
+    <section class="paper-section" id="metric">
+      <h2>Scene Graph Consistency Score</h2>
+      <p class="section-intro">Compare what is there and where it is—not just the pixels.</p>
+      <figure class="paper-figure metric-figure"><button class="figure-zoom" type="button" data-zoom="assets/sgcs-pipeline.webp" aria-label="Enlarge Figure 3: SGCS evaluation pipeline"><img src="assets/sgcs-pipeline.webp" width="1584" height="916" loading="lazy" alt="SGCS pipeline: align ground-truth and generated frames, segment semantic categories using SAM 3, match objects, then aggregate consistency."><span class="zoom-label">Enlarge figure ↗</span></button><figcaption><strong>Figure 3.</strong> SGCS evaluates matched object structure in generated and ground-truth observations.</figcaption></figure>
+      <div class="principles metric-steps"><div><span class="step-number">01</span><h3>Segment</h3><p>Extract category-wise object masks from aligned frame pairs using SAM 3.</p></div><div><span class="step-number">02</span><h3>Match</h3><p>Match instances within each category using normalized centroid distance and bipartite matching.</p></div><div><span class="step-number">03</span><h3>Aggregate</h3><p>Compute category consistency, weight by visible area, then average over sampled video frames.</p></div></div>
+      <details class="detail-block"><summary>How SGCS is computed <span aria-hidden="true">+</span></summary><div class="details-body"><p>For a category with <i>m</i> ground-truth instances, <i>n</i> generated instances, and <i>p</i> matched pairs, consistency is the instance-level Dice score:</p><div class="formula">S<sub>c</sub> = 2p / (m + n) <span>SGCS<sub>t</sub> = Σ<sub>c</sub> w<sub>c</sub>S<sub>c</sub> / Σ<sub>c</sub> w<sub>c</sub></span></div><p>The category weight <i>w</i><sub>c</sub> is its average mask area across the two frames. Video-level SGCS averages frame scores. The implementation samples every 5 frames by default and uses a matching threshold of 0.1 times the image diagonal.</p><p>Semantic categories include building, tree, flower, grass, path, water, sky, sand, and dirt. The current metric uses object presence and centroid alignment; explicitly comparing relational edges is discussed as future work.</p></div></details>
+      <h3 class="subsection-heading">Tolerate small shifts. Detect structural changes.</h3>
+      <div class="prose"><p>Controlled perturbations test two properties: robustness to color changes and small geometric shifts, and sensitivity to object deletion or position swapping. The paper compares SGCS with SSIM and sim-LPIPS (1 − LPIPS).</p></div>
+      <figure class="paper-figure"><button class="figure-zoom" type="button" data-zoom="assets/metric-validation.webp" aria-label="Enlarge Figure 4: metric validation and per-frame consistency"><img src="assets/metric-validation.webp" width="1600" height="380" loading="lazy" alt="Figure 4: SGCS versus SSIM and sim-LPIPS under controlled perturbations, alongside per-frame SGCS curves during model rollouts."><span class="zoom-label">Enlarge figure ↗</span></button><figcaption><strong>Figure 4.</strong> Left: controlled perturbations. Right: consistency over the generation horizon. Original plots from the paper.</figcaption></figure>
+    </section>
+
+    <section class="paper-section results-section" id="results">
+      <h2>How Consistent Are Today’s World Models?</h2>
+      <p class="section-intro">Five baselines. Three loop types. A challenging test of spatial memory.</p>
+      <div class="results-controls"><div class="segmented" role="group" aria-label="Evaluation task"><button type="button" data-result-task="TURN" aria-pressed="false">TURN</button><button type="button" data-result-task="ABA" aria-pressed="true">ABA</button><button type="button" data-result-task="ABCA" aria-pressed="false">ABCA</button></div><span>SGCS ↑ <span class="muted">Higher is better</span></span></div>
+      <p class="table-caption" id="table-caption"><strong>Table 1.</strong> SGCS (mean ± standard deviation). Each row reports 60 trajectories; the best mean in each row is highlighted.</p>
+      <p class="table-scroll-hint">Swipe to see all models →</p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="SGCS benchmark results"><table aria-describedby="table-caption"><thead><tr><th id="range-heading" scope="col">Range (blocks)</th><th scope="col">Oasis</th><th scope="col">NWM</th><th scope="col">MineWorld</th><th scope="col">DIAMOND</th><th scope="col">WorldMem</th></tr></thead><tbody id="results-rows"></tbody></table></div>
+      <p class="results-insight" id="results-insight" aria-live="polite">WorldMem has the highest SGCS at 5 blocks; NWM leads at 15, 30, and 50 blocks. Maintaining consistency over longer loops remains challenging.</p>
+      <noscript><p>The interactive table requires JavaScript. All benchmark results are available in <a href="assets/loopnav-paper.pdf#page=8">Table 1 of the paper</a>.</p></noscript>
+      <h3 class="subsection-heading">What does forgetting look like?</h3>
+      <div class="prose"><p>As the rollout progresses, generated scenes can lose familiar buildings, alter the layout, or degrade visually. The qualitative example below compares ground truth with four world model baselines.</p></div>
+      <figure class="paper-figure"><button class="figure-zoom" type="button" data-zoom="assets/qualitative.webp" aria-label="Enlarge Figure 5: qualitative model comparison"><img src="assets/qualitative.webp" width="1608" height="716" loading="lazy" alt="Ground truth, Oasis, MineWorld, DIAMOND, and NWM frame sequences, showing how reconstructions diverge from the observed environment."><span class="zoom-label">Enlarge figure ↗</span></button><figcaption><strong>Figure 5.</strong> Rows: ground truth, Oasis, MineWorld, DIAMOND, and NWM. All models begin rollout at frame 84.</figcaption></figure>
+      <details class="detail-block"><summary>Limitations and interpretation <span aria-hidden="true">+</span></summary><div class="details-body"><p>Simple backgrounds such as grass and sky can produce relatively high consistency scores even when spatial memory fails. SGCS should be interpreted alongside qualitative observations and scene complexity. The benchmark focuses on static Minecraft structures; dynamic scenes and richer object relationships remain directions for future work.</p><p>Values above are transcribed from Table 1 of the supplied manuscript. Figure 5 compares the four baselines shown in that figure; WorldMem is included in Table 1.</p></div></details>
+    </section>
+
+    <section class="paper-section citation-section" id="citation">
+      <h2>BibTeX</h2>
+      <p class="citation-intro">If you find LoopNav useful for your research, please cite the work.</p>
+      <div class="citation-code"><button type="button" id="copy-citation">Copy BibTeX</button><pre><code id="bibtex">@misc{lian2026loopnavbenchmarkingspatialconsistency,
+  title={LoopNav: Benchmarking Spatial Consistency in World Models},
+  author={Kewei Lian and Shaofei Cai and Yitao Liang and Anji Liu},
+  year={2026},
+  eprint={2505.22976},
+  archivePrefix={arXiv},
+  primaryClass={cs.CV},
+  url={https://arxiv.org/abs/2505.22976},
+}</code></pre></div><p class="copy-status" id="copy-status" role="status"></p>
+      <div class="resource-links"><a href="https://arxiv.org/abs/2505.22976" target="_blank" rel="noopener noreferrer">Read the paper ↗</a><a href="https://github.com/Kevin-lkw/LoopNav" target="_blank" rel="noopener noreferrer">Explore the code ↗</a><a href="https://huggingface.co/datasets/kevinLian/LoopNav" target="_blank" rel="noopener noreferrer">Get the dataset ↗</a></div>
+    </section>
+  </main>
+  <footer><p>LoopNav · Benchmarking Spatial Consistency in World Models</p><p>Website layout inspired by <a href="https://kevin-lkw.github.io/RefineKV-release/" target="_blank" rel="noopener noreferrer">RefineKV</a>. Figures and results from the LoopNav paper.</p><a class="back-top" href="#top">Back to top ↑</a></footer>
+  <dialog id="figure-dialog" aria-label="Enlarged paper figure"><button type="button" class="dialog-close" autofocus>Close <span aria-hidden="true">×</span></button><img id="dialog-image" src="assets/loop-overview.webp" alt="Enlarged loop trajectory overview"></dialog>
+</body>
+</html>
